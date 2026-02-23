@@ -5,8 +5,10 @@ import { skillTool, SKILL_TOOL_DESCRIPTION } from './skill.js';
 import { webFetchTool } from './fetch/index.js';
 import { browserTool } from './browser/index.js';
 import { readFileTool, writeFileTool, editFileTool } from './filesystem/index.js';
-import { FINANCIAL_SEARCH_DESCRIPTION, FINANCIAL_METRICS_DESCRIPTION, WEB_SEARCH_DESCRIPTION, WEB_FETCH_DESCRIPTION, READ_FILINGS_DESCRIPTION, BROWSER_DESCRIPTION, READ_FILE_DESCRIPTION, WRITE_FILE_DESCRIPTION, EDIT_FILE_DESCRIPTION } from './descriptions/index.js';
+import { FINANCIAL_SEARCH_DESCRIPTION, FINANCIAL_METRICS_DESCRIPTION, WEB_SEARCH_DESCRIPTION, WEB_FETCH_DESCRIPTION, READ_FILINGS_DESCRIPTION, BROWSER_DESCRIPTION, READ_FILE_DESCRIPTION, WRITE_FILE_DESCRIPTION, EDIT_FILE_DESCRIPTION, MACRO_SEARCH_DESCRIPTION, SUPPLY_CHAIN_SEARCH_DESCRIPTION, CATALYST_SEARCH_DESCRIPTION } from './descriptions/index.js';
 import { discoverSkills } from '../skills/index.js';
+import { createMacroSearch } from './macro/index.js';
+import { createSupplyChainSearch, createCatalystSearch } from './research/index.js';
 
 /**
  * A registered tool with its rich description for system prompt injection.
@@ -70,6 +72,29 @@ export function getToolRegistry(model: string): RegisteredTool[] {
       description: EDIT_FILE_DESCRIPTION,
     },
   ];
+
+  // Include macro_search if FRED API key is configured
+  if (process.env.FRED_API_KEY) {
+    tools.push({
+      name: 'macro_search',
+      tool: createMacroSearch(model),
+      description: MACRO_SEARCH_DESCRIPTION,
+    });
+  }
+
+  // Include supply_chain_search — always available (free SEC EDGAR)
+  tools.push({
+    name: 'supply_chain_search',
+    tool: createSupplyChainSearch(model),
+    description: SUPPLY_CHAIN_SEARCH_DESCRIPTION,
+  });
+
+  // Include catalyst_search — always available
+  tools.push({
+    name: 'catalyst_search',
+    tool: createCatalystSearch(model),
+    description: CATALYST_SEARCH_DESCRIPTION,
+  });
 
   // Include web_search if Exa, Perplexity, or Tavily API key is configured (Exa → Perplexity → Tavily)
   if (process.env.EXASEARCH_API_KEY) {

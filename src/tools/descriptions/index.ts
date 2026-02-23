@@ -11,3 +11,6 @@ export { BROWSER_DESCRIPTION } from './browser.js';
 export { READ_FILE_DESCRIPTION } from './read-file.js';
 export { WRITE_FILE_DESCRIPTION } from './write-file.js';
 export { EDIT_FILE_DESCRIPTION } from './edit-file.js';
+export { MACRO_SEARCH_DESCRIPTION } from './macro-search.js';
+export { SUPPLY_CHAIN_SEARCH_DESCRIPTION } from './supply-chain-search.js';
+export { CATALYST_SEARCH_DESCRIPTION } from './catalyst-search.js';

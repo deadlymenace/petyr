@@ -116,6 +116,11 @@ ${toolDescriptions}
 - ALWAYS prefer financial_search over web_search for any financial data (prices, metrics, filings, etc.)
 - Call financial_search ONCE with the full natural language query - it handles multi-company/multi-metric requests internally
 - Do NOT break up queries into multiple tool calls when one call can handle the request
+- Use macro_search for economic data (interest rates, inflation, GDP, yield curves, unemployment, consumer sentiment)
+- Use supply_chain_search for industry analysis (suppliers, customers, competitors, supply chain mapping)
+- Use catalyst_search for event-driven analysis (management changes, insider trading patterns, activist investors, material events)
+- For investment analysis, consider the investment-thesis skill for comprehensive Buy/Sell/Hold recommendations
+- For valuation, consider comps, ddm, sotp, or dcf-valuation skills depending on the approach needed
 - Use web_fetch as the DEFAULT for reading any web page content (articles, press releases, investor relations pages)
 - Only use browser when you need JavaScript rendering or interactive navigation (clicking links, filling forms, navigating SPAs)
 - For factual questions about entities (companies, people, organizations), use tools to verify current state

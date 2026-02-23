@@ -18,10 +18,13 @@ import { getAnalystEstimates } from './estimates.js';
 import { getSegmentedRevenues } from './segments.js';
 import { getCryptoPriceSnapshot, getCryptoPrices, getCryptoTickers } from './crypto.js';
 import { getInsiderTrades } from './insider_trades.js';
+import { getStockPrices, getPriceSnapshot } from './stock-prices.js';
 
 // All finance tools available for routing
 const FINANCE_TOOLS: StructuredToolInterface[] = [
   // Price Data
+  getStockPrices,
+  getPriceSnapshot,
   getCryptoPriceSnapshot,
   getCryptoPrices,
   getCryptoTickers,
@@ -61,6 +64,8 @@ Given a user's natural language query about financial data, call the appropriate
    - "YTD" → start_date Jan 1 of current year, end_date today
 
 3. **Tool Selection**:
+   - For stock price history, OHLCV data, price trends → get_stock_prices
+   - For current/latest stock price → get_price_snapshot
    - For "historical" or "over time" data, use date-range tools
    - For P/E ratio, market cap, valuation metrics → get_key_ratios
    - For revenue, earnings, profitability → get_income_statements
