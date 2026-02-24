@@ -14,7 +14,7 @@ import { appendFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const LOG_PATH = join(homedir(), '.dexter', 'gateway-debug.log');
+const LOG_PATH = join(homedir(), '.petyr', 'gateway-debug.log');
 function debugLog(msg: string) {
   appendFileSync(LOG_PATH, `${new Date().toISOString()} ${msg}\n`);
 }
@@ -116,7 +116,7 @@ async function handleInbound(cfg: GatewayConfig, inbound: WhatsAppInboundMessage
       debugLog(`[gateway] sending reply to ${inbound.replyToJid}`);
       await sendMessageWhatsApp({
         to: inbound.replyToJid,
-        body: `[Dexter] ${cleanedAnswer}`,
+        body: `[Petyr] ${cleanedAnswer}`,
         accountId: inbound.accountId,
       });
       console.log(`Sent reply (${answer.length} chars, ${durationMs}ms)`);

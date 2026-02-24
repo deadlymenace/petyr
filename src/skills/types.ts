@@ -1,8 +1,8 @@
 /**
  * Source of a skill definition.
- * - builtin: Shipped with Dexter (src/skills/builtin/)
- * - user: User-level skills (~/.dexter/skills/)
- * - project: Project-level skills (.dexter/skills/)
+ * - builtin: Shipped with Petyr (src/skills/builtin/)
+ * - user: User-level skills (~/.petyr/skills/)
+ * - project: Project-level skills (.petyr/skills/)
  */
 export type SkillSource = 'builtin' | 'user' | 'project';
 

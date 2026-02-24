@@ -15,7 +15,7 @@ export type SessionEntry = {
 export type SessionStore = Record<string, SessionEntry>;
 
 export function resolveSessionStorePath(agentId: string): string {
-  const base = process.env.DEXTER_SESSIONS_DIR ?? join(homedir(), '.dexter', 'sessions');
+  const base = process.env.PETYR_SESSIONS_DIR ?? join(homedir(), '.petyr', 'sessions');
   return join(base, agentId, 'sessions.json');
 }
 

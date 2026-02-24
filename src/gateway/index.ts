@@ -59,7 +59,7 @@ async function run(): Promise<void> {
   }
 
   const server = await startGateway();
-  console.log('Dexter gateway running. Press Ctrl+C to stop.');
+  console.log('Petyr gateway running. Press Ctrl+C to stop.');
 
   const shutdown = async () => {
     await server.stop();

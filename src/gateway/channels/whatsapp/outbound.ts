@@ -7,7 +7,7 @@ import { loadGatewayConfig, resolveWhatsAppAccount } from '../../config.js';
 import { normalizeE164, toWhatsappJid } from '../../utils.js';
 
 function debugLog(msg: string) {
-  const logPath = path.join(os.homedir(), '.dexter', 'gateway-debug.log');
+  const logPath = path.join(os.homedir(), '.petyr', 'gateway-debug.log');
   fs.appendFileSync(logPath, `${new Date().toISOString()} ${msg}\n`);
 }
 
@@ -35,7 +35,7 @@ function getActive(accountId?: string): ActiveListener {
   }
   const first = listeners.values().next().value as ActiveListener | undefined;
   if (!first) {
-    throw new Error('No active WhatsApp listener. Run dexter gateway run.');
+    throw new Error('No active WhatsApp listener. Run petyr gateway run.');
   }
   return first;
 }

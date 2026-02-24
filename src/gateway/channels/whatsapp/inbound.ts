@@ -17,7 +17,7 @@ import { appendFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const LOG_PATH = join(homedir(), '.dexter', 'gateway-debug.log');
+const LOG_PATH = join(homedir(), '.petyr', 'gateway-debug.log');
 function debugLog(msg: string) {
   appendFileSync(LOG_PATH, `${new Date().toISOString()} ${msg}\n`);
 }

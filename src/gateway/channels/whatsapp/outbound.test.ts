@@ -30,16 +30,16 @@ function writeGatewayConfig(configPath: string, allowFrom: string[]): void {
 
 describe('whatsapp outbound strict allowlist', () => {
   afterEach(() => {
-    delete process.env.DEXTER_GATEWAY_CONFIG;
+    delete process.env.PETYR_GATEWAY_CONFIG;
     setActiveWebListener('default', null);
   });
 
   test('blocks sendMessage to non-allowlisted recipient', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dexter-outbound-'));
+    const dir = mkdtempSync(join(tmpdir(), 'petyr-outbound-'));
     const configPath = join(dir, 'gateway.json');
     let sendCount = 0;
     writeGatewayConfig(configPath, ['+15551234567']);
-    process.env.DEXTER_GATEWAY_CONFIG = configPath;
+    process.env.PETYR_GATEWAY_CONFIG = configPath;
     const sock = {
       sendMessage: async () => {
         sendCount += 1;
@@ -64,11 +64,11 @@ describe('whatsapp outbound strict allowlist', () => {
   });
 
   test('blocks sendComposing to non-allowlisted recipient', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dexter-outbound-'));
+    const dir = mkdtempSync(join(tmpdir(), 'petyr-outbound-'));
     const configPath = join(dir, 'gateway.json');
     let presenceCount = 0;
     writeGatewayConfig(configPath, ['+15551234567']);
-    process.env.DEXTER_GATEWAY_CONFIG = configPath;
+    process.env.PETYR_GATEWAY_CONFIG = configPath;
     const sock = {
       sendMessage: async () => ({ key: { id: 'msg-1' } }),
       sendPresenceUpdate: async () => {

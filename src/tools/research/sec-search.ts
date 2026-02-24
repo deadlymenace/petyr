@@ -77,7 +77,7 @@ export const secFullTextSearch = new DynamicStructuredTool({
     try {
       response = await fetch(url.toString(), {
         headers: {
-          'User-Agent': 'Dexter Financial Research Tool research@dexter.ai',
+          'User-Agent': 'Petyr Financial Research Tool research@petyr.ai',
           'Accept': 'application/json',
         },
       });
