@@ -14,3 +14,8 @@ export { EDIT_FILE_DESCRIPTION } from './edit-file.js';
 export { MACRO_SEARCH_DESCRIPTION } from './macro-search.js';
 export { SUPPLY_CHAIN_SEARCH_DESCRIPTION } from './supply-chain-search.js';
 export { CATALYST_SEARCH_DESCRIPTION } from './catalyst-search.js';
+export { NEWS_SENTIMENT_DESCRIPTION } from './news-sentiment.js';
+export { GENERATE_REPORT_DESCRIPTION } from './report.js';
+export { STOCK_SCREENER_DESCRIPTION } from './stock-screener.js';
+export { WATCHLIST_DESCRIPTION } from './watchlist.js';
+export { X_RESEARCH_DESCRIPTION } from './x-research.js';

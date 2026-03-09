@@ -13,7 +13,7 @@ import { AgentToolExecutor } from './tool-executor.js';
 
 
 const DEFAULT_MODEL = 'gpt-5.2';
-const DEFAULT_MAX_ITERATIONS = 10;
+const DEFAULT_MAX_ITERATIONS = 6;
 
 /**
  * The core agent class that handles the agent loop and tool execution.

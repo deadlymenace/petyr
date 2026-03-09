@@ -34,3 +34,10 @@ export const CONTEXT_THRESHOLD = 100_000;
  * Anthropic's default is 3, but we use 5 for slightly more context.
  */
 export const KEEP_TOOL_USES = 5;
+
+/**
+ * Maximum character length for a single tool result before truncation.
+ * 12,000 chars ≈ 3,400 tokens. Prevents oversized API responses
+ * (web_fetch, browser snapshots) from dominating context across iterations.
+ */
+export const MAX_TOOL_RESULT_CHARS = 12_000;

@@ -2,12 +2,12 @@ import { type ToolContext, Scratchpad } from './scratchpad.js';
 import { getToolDescription } from '../utils/tool-description.js';
 
 /**
- * Build full context data for final answer generation from scratchpad.
- * Anthropic-style: uses all full tool results (cleared entries were already
- * handled during iteration, final answer gets comprehensive context).
+ * Build context data for final answer generation from scratchpad.
+ * Uses only active (non-cleared) tool results to respect context clearing
+ * and avoid re-expanding results that were already dropped during iteration.
  */
 export function buildFinalAnswerContext(scratchpad: Scratchpad): string {
-  const contexts = scratchpad.getFullContexts();
+  const contexts = scratchpad.getActiveToolResults();
 
   if (contexts.length === 0) {
     return 'No data was gathered.';
@@ -23,10 +23,6 @@ export function buildFinalAnswerContext(scratchpad: Scratchpad): string {
 
 function formatToolContext(ctx: ToolContext): string {
   const description = getToolDescription(ctx.toolName, ctx.args);
-  try {
-    return `### ${description}\n\`\`\`json\n${JSON.stringify(JSON.parse(ctx.result), null, 2)}\n\`\`\``;
-  } catch {
-    // If result is not valid JSON, return as-is
-    return `### ${description}\n${ctx.result}`;
-  }
+  // Compact format — no pretty-print to save tokens
+  return `### ${description}\n${ctx.result}`;
 }

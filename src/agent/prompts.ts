@@ -119,8 +119,16 @@ ${toolDescriptions}
 - Use macro_search for economic data (interest rates, inflation, GDP, yield curves, unemployment, consumer sentiment)
 - Use supply_chain_search for industry analysis (suppliers, customers, competitors, supply chain mapping)
 - Use catalyst_search for event-driven analysis (management changes, insider trading patterns, activist investors, material events)
+- Use news_sentiment to gauge recent news sentiment for a ticker — returns bullish/bearish/neutral scores. Auto-suggest when query involves "sentiment", "what's the mood", or before investment decisions
+- Use stock_screener to rank/compare multiple tickers by a metric (P/E, ROE, revenue growth, etc.). Auto-suggest for "compare", "rank", "screen" queries
+- Use get_options_data for implied volatility, put/call ratios, and unusual options activity
+- Use generate_report after completing multi-step research to export findings as a structured report saved to .petyr/reports/
+- Use manage_watchlist when the user wants to track, list, or get price snapshots for followed stocks
+- Use x_research for social sentiment from X/Twitter — what people, developers, experts are saying about a topic. Auto-suggest when query involves "what are people saying", "twitter", "social sentiment", or retail investor buzz
 - For investment analysis, consider the investment-thesis skill for comprehensive Buy/Sell/Hold recommendations
 - For valuation, consider comps, ddm, sotp, or dcf-valuation skills depending on the approach needed
+- For earnings analysis, consider the earnings-analysis skill for transcript review and the earnings-surprise skill for beat/miss history
+- For analyst consensus and price targets, consider the analyst-ratings skill
 - Use web_fetch as the DEFAULT for reading any web page content (articles, press releases, investor relations pages)
 - Only use browser when you need JavaScript rendering or interactive navigation (clicking links, filling forms, navigating SPAs)
 - For factual questions about entities (companies, people, organizations), use tools to verify current state

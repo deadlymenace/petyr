@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petyr — AI Financial Research Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- ====== NAVIGATION ====== -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">Petyr</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#tools">Tools</a>
+        <a href="#skills">Skills</a>
+      </div>
+      <button class="btn-primary btn-sm" id="nav-cta">Try Petyr</button>
+    </div>
+  </nav>
+
+  <!-- ====== HERO ====== -->
+  <section class="hero" id="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-badge">AI-Powered Financial Research</div>
+      <h1 class="hero-title">Your Wall Street<br>Research Team, in a Chat</h1>
+      <p class="hero-subtitle">Petyr reads SEC filings, analyzes financial data, tracks insider trades, and builds investment theses &mdash; the same work that takes analysts days, done in minutes.</p>
+      <div class="hero-actions">
+        <button class="btn-primary btn-lg" id="hero-cta">Try Petyr</button>
+        <a href="#features" class="btn-ghost btn-lg">See What It Can Do</a>
+      </div>
+      <div class="hero-examples">
+        <span class="hero-example">"What's NVIDIA worth using a DCF model?"</span>
+        <span class="hero-example">"Who are Apple's biggest suppliers?"</span>
+        <span class="hero-example">"Build me an investment thesis for Microsoft"</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FEATURES (Bento Grid) ====== -->
+  <section class="section features" id="features">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2 class="section-title">Everything a Research Analyst Does. Automated.</h2>
+        <p class="section-subtitle">18 specialized tools and 23 analysis skills deliver institutional-quality research through a simple conversation.</p>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Large: Financial Intelligence -->
+        <div class="bento-card bento-lg" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20V14"/></svg>
+          </div>
+          <h3>Financial Intelligence</h3>
+          <p>Pull income statements, balance sheets, cash flows, and key ratios for any public company. Compare metrics across peers instantly.</p>
+          <div class="bento-chips">
+            <span class="tool-chip">financial_search</span>
+            <span class="tool-chip">financial_metrics</span>
+            <span class="tool-chip">stock_screener</span>
+          </div>
+        </div>
+
+        <!-- Medium: SEC Filings -->
+        <div class="bento-card bento-md" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+          </div>
+          <h3>SEC Filing Analysis</h3>
+          <p>Read and interpret 10-K, 10-Q, and 8-K filings. Extract risk factors, management discussion, and material events automatically.</p>
+          <div class="bento-chips"><span class="tool-chip">read_filings</span></div>
+        </div>
+
+        <!-- Medium: Market Sentiment -->
+        <div class="bento-card bento-md" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>Market Sentiment</h3>
+          <p>Gauge what the market thinks. AI-scored news headlines, X/Twitter social buzz, and analyst consensus — combined into one signal.</p>
+          <div class="bento-chips">
+            <span class="tool-chip">news_sentiment</span>
+            <span class="tool-chip">x_research</span>
+          </div>
+        </div>
+
+        <!-- Medium: Supply Chain -->
+        <div class="bento-card bento-md" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>
+          </div>
+          <h3>Supply Chain Mapping</h3>
+          <p>Discover who supplies to whom, which customers matter most, and who the real competitors are — straight from SEC filings.</p>
+          <div class="bento-chips"><span class="tool-chip">supply_chain_search</span></div>
+        </div>
+
+        <!-- Medium: Catalyst Tracking -->
+        <div class="bento-card bento-md" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3>Catalyst Tracking</h3>
+          <p>Spot management changes, unusual insider trading patterns, and activist investor moves before they hit the headlines.</p>
+          <div class="bento-chips"><span class="tool-chip">catalyst_search</span></div>
+        </div>
+
+        <!-- Large: Economic Intelligence -->
+        <div class="bento-card bento-lg" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          </div>
+          <h3>Economic Intelligence</h3>
+          <p>Track interest rates, inflation, GDP, yield curves, and unemployment data from the Federal Reserve. Understand the macro backdrop for any investment.</p>
+          <div class="bento-chips"><span class="tool-chip">macro_search</span></div>
+        </div>
+
+        <!-- Small: Options -->
+        <div class="bento-card bento-sm" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+          </div>
+          <h3>Options Analysis</h3>
+          <p>Options chains, implied volatility, and put/call ratios at a glance.</p>
+          <div class="bento-chips"><span class="tool-chip">get_options_data</span></div>
+        </div>
+
+        <!-- Small: Reports -->
+        <div class="bento-card bento-sm" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          </div>
+          <h3>Export Reports</h3>
+          <p>Generate structured markdown reports from any research session.</p>
+          <div class="bento-chips"><span class="tool-chip">generate_report</span></div>
+        </div>
+
+        <!-- Small: Watchlist -->
+        <div class="bento-card bento-sm" data-animate>
+          <div class="bento-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Watchlist</h3>
+          <p>Track your favorite stocks with persistent price snapshots across sessions.</p>
+          <div class="bento-chips"><span class="tool-chip">manage_watchlist</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== HOW IT WORKS ====== -->
+  <section class="section how-it-works" id="how-it-works">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2 class="section-title">How Petyr Works</h2>
+        <p class="section-subtitle">Ask a question in plain English. Petyr handles the rest.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step" data-animate>
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3>Ask Anything</h3>
+            <p>Type your question the way you'd ask a colleague. No query language, no syntax — just English.</p>
+            <div class="step-visual">
+              <div class="mock-input">
+                <span class="mock-cursor"></span>
+                <span class="mock-text">What's NVIDIA's fair value using a DCF model?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <div class="step" data-animate>
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3>Petyr Researches</h3>
+            <p>The agent selects the right tools, gathers live data from financial APIs and SEC filings, and validates its own work.</p>
+            <div class="step-visual">
+              <div class="mock-tools">
+                <div class="mock-tool completed"><span class="mock-check">&#10003;</span> financial_search <span class="mock-time">1.8s</span></div>
+                <div class="mock-tool completed"><span class="mock-check">&#10003;</span> read_filings <span class="mock-time">2.1s</span></div>
+                <div class="mock-tool running"><span class="mock-spinner"></span> macro_search</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <div class="step" data-animate>
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h3>Get Your Answer</h3>
+            <p>Receive a detailed, data-backed analysis with tables, calculations, and clear conclusions — ready to act on.</p>
+            <div class="step-visual">
+              <div class="mock-result">
+                <div class="mock-result-header">DCF Valuation Summary</div>
+                <div class="mock-result-row"><span>Implied Fair Value</span><span class="mock-highlight">$142.50</span></div>
+                <div class="mock-result-row"><span>Current Price</span><span>$131.20</span></div>
+                <div class="mock-result-row"><span>Upside</span><span class="mock-highlight">+8.6%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== TOOLS ====== -->
+  <section class="section tools-section" id="tools">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2 class="section-title">18 Specialized Tools</h2>
+        <p class="section-subtitle">Each tool connects to live data sources. Petyr picks the right ones automatically.</p>
+      </div>
+
+      <div class="tools-grid">
+        <div class="tool-card" data-animate><div class="tool-card-name">financial_search</div><div class="tool-card-desc">Income statements, balance sheets, cash flows, stock prices, insider trades</div><div class="tool-card-source">Financial Datasets API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">financial_metrics</div><div class="tool-card-desc">Key ratios — P/E, EV/EBITDA, ROE, margins, dividend yield, and more</div><div class="tool-card-source">Financial Datasets API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">read_filings</div><div class="tool-card-desc">Read SEC filings: 10-K, 10-Q, 8-K annual and quarterly reports</div><div class="tool-card-source">Financial Datasets API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">stock_screener</div><div class="tool-card-desc">Rank and compare multiple stocks by any financial metric</div><div class="tool-card-source">Financial Datasets API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">get_options_data</div><div class="tool-card-desc">Options chains, implied volatility, put/call ratios, unusual activity</div><div class="tool-card-source">Financial Datasets API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">macro_search</div><div class="tool-card-desc">Fed rates, GDP, inflation, yield curves, unemployment, consumer sentiment</div><div class="tool-card-source">FRED API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">supply_chain_search</div><div class="tool-card-desc">Map suppliers, customers, and competitors from SEC filing disclosures</div><div class="tool-card-source">SEC EDGAR</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">catalyst_search</div><div class="tool-card-desc">Management changes, insider trades, activist investors, material events</div><div class="tool-card-source">SEC EDGAR + FD API</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">news_sentiment</div><div class="tool-card-desc">AI-scored news and social media sentiment analysis with summary</div><div class="tool-card-source">Web + AI</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">x_research</div><div class="tool-card-desc">X/Twitter discourse analysis — what people are saying about any topic</div><div class="tool-card-source">Exa</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">web_search</div><div class="tool-card-desc">General web search for news articles, analysis, and context</div><div class="tool-card-source">Exa / Tavily</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">web_fetch</div><div class="tool-card-desc">Fetch and read any web page — press releases, investor relations, articles</div><div class="tool-card-source">Direct</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">browser</div><div class="tool-card-desc">Automated web browsing with Playwright for JavaScript-heavy sites</div><div class="tool-card-source">Playwright</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">generate_report</div><div class="tool-card-desc">Export any research session as a structured markdown report</div><div class="tool-card-source">Local</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">manage_watchlist</div><div class="tool-card-desc">Persistent stock watchlist with real-time price snapshots</div><div class="tool-card-source">Local</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">read_file</div><div class="tool-card-desc">Read files from your workspace for context</div><div class="tool-card-source">Local</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">write_file</div><div class="tool-card-desc">Create new files in your workspace</div><div class="tool-card-source">Local</div></div>
+        <div class="tool-card" data-animate><div class="tool-card-name">edit_file</div><div class="tool-card-desc">Modify existing workspace files</div><div class="tool-card-source">Local</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== SKILLS ====== -->
+  <section class="section skills-section" id="skills">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2 class="section-title">23 Analysis Skills</h2>
+        <p class="section-subtitle">Structured research workflows that combine multiple tools to deliver Wall Street-grade analysis.</p>
+      </div>
+
+      <div class="skill-categories">
+        <!-- Valuation Models -->
+        <div class="skill-category" data-animate>
+          <h3 class="skill-cat-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h4"/></svg>
+            Valuation Models
+          </h3>
+          <div class="skill-list">
+            <div class="skill-item"><span class="skill-name">DCF Valuation</span><span class="skill-desc">Projects free cash flows and discounts to present value</span></div>
+            <div class="skill-item"><span class="skill-name">Comparable Companies</span><span class="skill-desc">Peer group analysis with EV/EBITDA, P/E multiples</span></div>
+            <div class="skill-item"><span class="skill-name">Dividend Discount Model</span><span class="skill-desc">Gordon Growth and multi-stage dividend models</span></div>
+            <div class="skill-item"><span class="skill-name">Sum-of-the-Parts</span><span class="skill-desc">Values each business segment independently</span></div>
+            <div class="skill-item"><span class="skill-name">Residual Income</span><span class="skill-desc">Measures value creation above cost of capital</span></div>
+          </div>
+        </div>
+
+        <!-- Quality & Scoring -->
+        <div class="skill-category" data-animate>
+          <h3 class="skill-cat-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Quality & Scoring
+          </h3>
+          <div class="skill-list">
+            <div class="skill-item"><span class="skill-name">Piotroski F-Score</span><span class="skill-desc">Financial strength scoring (0-9) across profitability and leverage</span></div>
+            <div class="skill-item"><span class="skill-name">Altman Z-Score</span><span class="skill-desc">Bankruptcy risk prediction using 5 financial ratios</span></div>
+            <div class="skill-item"><span class="skill-name">Beneish M-Score</span><span class="skill-desc">Earnings manipulation detection</span></div>
+            <div class="skill-item"><span class="skill-name">Quality of Earnings</span><span class="skill-desc">Accruals analysis, cash flow vs. net income quality</span></div>
+            <div class="skill-item"><span class="skill-name">DuPont Analysis</span><span class="skill-desc">ROE decomposition into margin, turnover, and leverage</span></div>
+          </div>
+        </div>
+
+        <!-- Strategy & Research -->
+        <div class="skill-category" data-animate>
+          <h3 class="skill-cat-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            Strategy & Research
+          </h3>
+          <div class="skill-list">
+            <div class="skill-item"><span class="skill-name">Investment Thesis</span><span class="skill-desc">Full Buy/Sell/Hold with bull and bear cases</span></div>
+            <div class="skill-item"><span class="skill-name">Competitive Analysis</span><span class="skill-desc">Moat assessment, market share, Porter's Five Forces</span></div>
+            <div class="skill-item"><span class="skill-name">Channel Checks</span><span class="skill-desc">Alternative data — hiring trends, web traffic, app downloads</span></div>
+            <div class="skill-item"><span class="skill-name">Earnings Analysis</span><span class="skill-desc">Deep dive into quarterly earnings and guidance</span></div>
+            <div class="skill-item"><span class="skill-name">Earnings Surprise</span><span class="skill-desc">Beat/miss history and estimate revision trends</span></div>
+            <div class="skill-item"><span class="skill-name">Analyst Ratings</span><span class="skill-desc">Consensus estimates, price targets, upgrades/downgrades</span></div>
+          </div>
+        </div>
+
+        <!-- Macro & Risk -->
+        <div class="skill-category" data-animate>
+          <h3 class="skill-cat-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Macro & Risk
+          </h3>
+          <div class="skill-list">
+            <div class="skill-item"><span class="skill-name">Macro Outlook</span><span class="skill-desc">Economic environment — rates, inflation, growth cycle</span></div>
+            <div class="skill-item"><span class="skill-name">Regulatory Scan</span><span class="skill-desc">Pending legislation, agency actions, compliance exposure</span></div>
+            <div class="skill-item"><span class="skill-name">Technical Analysis</span><span class="skill-desc">SMA/EMA, RSI, MACD, Bollinger Bands, support/resistance</span></div>
+            <div class="skill-item"><span class="skill-name">Beta & Sharpe</span><span class="skill-desc">Risk metrics — volatility, max drawdown, risk-adjusted returns</span></div>
+          </div>
+        </div>
+
+        <!-- Screening -->
+        <div class="skill-category" data-animate>
+          <h3 class="skill-cat-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Screening & Efficiency
+          </h3>
+          <div class="skill-list">
+            <div class="skill-item"><span class="skill-name">Magic Formula</span><span class="skill-desc">Greenblatt's ranking by earnings yield + return on capital</span></div>
+            <div class="skill-item"><span class="skill-name">ROIC Analysis</span><span class="skill-desc">Return on invested capital with WACC comparison</span></div>
+            <div class="skill-item"><span class="skill-name">Working Capital</span><span class="skill-desc">Cash conversion cycle — DSO, DIO, DPO trends</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FINAL CTA ====== -->
+  <section class="section final-cta">
+    <div class="section-inner">
+      <div class="cta-glow"></div>
+      <div class="cta-content">
+        <h2 class="section-title">Ready to Research?</h2>
+        <p class="section-subtitle">Start a conversation and get institutional-quality analysis in minutes, not days.</p>
+        <button class="btn-primary btn-lg" id="final-cta">Start Researching</button>
+        <div class="cta-examples">
+          <p class="cta-hint">Try asking:</p>
+          <div class="example-queries">
+            <button class="example-query" data-query="What is NVIDIA's fair value using a DCF model?">"What is NVIDIA's fair value using a DCF model?"</button>
+            <button class="example-query" data-query="Run a Piotroski F-Score on Tesla">"Run a Piotroski F-Score on Tesla"</button>
+            <button class="example-query" data-query="Build a full investment thesis for Microsoft">"Build a full investment thesis for Microsoft"</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-logo">Petyr</span>
+      <span class="footer-text">AI-powered financial research agent</span>
+      <a href="https://github.com/deadlymenace/petyr" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+  <!-- ====== CHAT OVERLAY ====== -->
+  <div class="chat-overlay" id="chat-overlay">
+    <button class="chat-close" id="chat-close" title="Back to home">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+
+    <div class="app">
+      <header class="header">
+        <div class="header-inner">
+          <h1 class="logo">Petyr</h1>
+          <span class="tagline">Financial Research Agent</span>
+          <div class="model-badge" id="model-badge"></div>
+        </div>
+      </header>
+
+      <main class="chat-container" id="chat-container">
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon">P</div>
+          <h2>What would you like to research?</h2>
+          <div class="suggestions">
+            <button class="suggestion" data-query="What's the news sentiment for NVDA?">News sentiment for NVDA</button>
+            <button class="suggestion" data-query="Rank AAPL, MSFT, GOOGL by P/E ratio">Compare AAPL, MSFT, GOOGL</button>
+            <button class="suggestion" data-query="Analyze TSLA's latest earnings call">TSLA earnings analysis</button>
+            <button class="suggestion" data-query="What are people saying about AI stocks on Twitter?">AI stocks on X/Twitter</button>
+          </div>
+        </div>
+        <div class="messages" id="messages"></div>
+      </main>
+
+      <footer class="input-area">
+        <div class="input-wrapper">
+          <textarea id="query-input" placeholder="Ask Petyr anything about markets, stocks, or economics..." rows="1"></textarea>
+          <button class="send-btn" id="send-btn" title="Send">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+          <button class="cancel-btn hidden" id="cancel-btn" title="Cancel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

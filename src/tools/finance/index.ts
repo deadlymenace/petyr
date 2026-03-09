@@ -9,4 +9,4 @@ export { getStockPrices, getPriceSnapshot } from './stock-prices.js';
 export { createFinancialSearch } from './financial-search.js';
 export { createFinancialMetrics } from './financial-metrics.js';
 export { createReadFilings } from './read-filings.js';
-
+export { createOptionsData } from './options.js';

@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, appendFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
+import { MAX_TOOL_RESULT_CHARS } from '../utils/tokens.js';
 
 /**
  * Record of a tool call for external consumers (e.g., DoneEvent)
@@ -84,6 +85,9 @@ export class Scratchpad {
   // Stores indices of tool_result entries that have been cleared from context
   private clearedToolIndices: Set<number> = new Set();
 
+  // In-memory entry cache — avoids redundant readFileSync + JSON.parse per iteration
+  private cachedEntries: ScratchpadEntry[] | null = null;
+
   constructor(query: string, limitConfig?: Partial<ToolLimitConfig>) {
     this.limitConfig = { ...DEFAULT_LIMIT_CONFIG, ...limitConfig };
 
@@ -113,12 +117,16 @@ export class Scratchpad {
     args: Record<string, unknown>,
     result: string
   ): void {
+    // Truncate oversized results to prevent context bloat across iterations
+    const truncated = result.length > MAX_TOOL_RESULT_CHARS
+      ? result.slice(0, MAX_TOOL_RESULT_CHARS) + `\n\n[...truncated, ${result.length - MAX_TOOL_RESULT_CHARS} chars omitted]`
+      : result;
     this.append({
       type: 'tool_result',
       timestamp: new Date().toISOString(),
       toolName,
       args,
-      result: this.parseResultSafely(result),
+      result: this.parseResultSafely(truncated),
     });
   }
 
@@ -474,10 +482,13 @@ export class Scratchpad {
   }
 
   /**
-   * Append-only write
+   * Append-only write (maintains in-memory cache)
    */
   private append(entry: ScratchpadEntry): void {
     appendFileSync(this.filepath, JSON.stringify(entry) + '\n');
+    if (this.cachedEntries) {
+      this.cachedEntries.push(entry);
+    }
   }
 
   /**
@@ -495,19 +506,24 @@ export class Scratchpad {
   }
 
   /**
-   * Read all entries from the log.
+   * Read all entries from the log (cached in memory after first read).
    * Skips malformed or corrupt lines (partial writes, disk corruption) to avoid
    * a single bad line crashing getToolSummaries, getFullContexts, etc.
    */
   private readEntries(): ScratchpadEntry[] {
+    if (this.cachedEntries) return this.cachedEntries;
+
     if (!existsSync(this.filepath)) {
       return [];
     }
 
-    return readFileSync(this.filepath, 'utf-8')
+    const entries = readFileSync(this.filepath, 'utf-8')
       .split('\n')
       .filter((line) => line.trim())
       .map((line) => this.parseLine(line))
       .filter((entry): entry is ScratchpadEntry => entry !== null);
+
+    this.cachedEntries = entries;
+    return entries;
   }
 }
