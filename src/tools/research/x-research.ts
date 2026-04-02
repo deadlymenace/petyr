@@ -22,11 +22,11 @@ const XResearchInputSchema = z.object({
 export function createXResearch(model: string): DynamicStructuredTool {
   return new DynamicStructuredTool({
     name: 'x_research',
-    description: `General-purpose X/Twitter research agent. Searches X for real-time perspectives, dev discussions, product feedback, cultural takes, breaking news, and expert opinions. Use when:
-- User says "search x for", "what are people saying about", "what's twitter saying", "check x for"
+    description: `General-purpose social media research agent. Searches X/Twitter, Reddit, StockTwits, and forums for real-time perspectives, dev discussions, product feedback, cultural takes, breaking news, and expert opinions. Use when:
+- User says "search x for", "what are people saying about", "what's twitter saying", "check social media"
 - User wants to find what devs/experts/community thinks about a topic
 - Social sentiment would add context to financial analysis (e.g., retail investor sentiment)
-- Breaking news or reactions to events are unfolding on X
+- Breaking news or reactions to events are unfolding on social media
 NOT for: posting tweets or account management. Uses recent search (last 7-30 days).`,
     schema: XResearchInputSchema,
     func: async (input) => {
@@ -42,19 +42,19 @@ NOT for: posting tweets or account management. Uses recent search (last 7-30 day
       try {
         const exa = new Exa(apiKey);
 
-        // Search X/Twitter using Exa's domain filtering
+        // Search social media using Exa's domain filtering
         const searchResult = await exa.searchAndContents(input.query, {
           numResults: maxResults,
           text: true,
-          includeDomains: ['twitter.com', 'x.com'],
+          includeDomains: ['reddit.com', 'stocktwits.com', 'twitter.com', 'x.com'],
           startPublishedDate: startDate.toISOString(),
-          category: 'tweet' as any,
         });
 
         const posts = (searchResult.results || []).map((r: any) => ({
           text: r.text?.slice(0, 500) || '',
           url: r.url || '',
           author: r.author || extractAuthorFromUrl(r.url),
+          platform: extractPlatform(r.url),
           published_date: r.publishedDate || null,
           score: r.score || null,
         }));
@@ -69,10 +69,10 @@ NOT for: posting tweets or account management. Uses recent search (last 7-30 day
         }
 
         // Use LLM to synthesize the posts into insights
-        const synthesisPrompt = `Analyze these X/Twitter posts about "${input.query}" and provide a synthesis.
+        const synthesisPrompt = `Analyze these social media posts about "${input.query}" and provide a synthesis.
 
 Posts:
-${posts.map((p: any, i: number) => `[${i + 1}] @${p.author}: ${p.text}`).join('\n\n')}
+${posts.map((p: any, i: number) => `[${i + 1}] [${p.platform}] @${p.author}: ${p.text}`).join('\n\n')}
 
 Respond with a JSON object:
 {
@@ -123,7 +123,17 @@ Respond with a JSON object:
 
 function extractAuthorFromUrl(url: string): string {
   if (!url) return 'unknown';
-  // Extract from twitter.com/username/status/... or x.com/username/status/...
-  const match = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
-  return match ? match[1] : 'unknown';
+  const twitterMatch = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
+  if (twitterMatch) return twitterMatch[1];
+  const redditMatch = url.match(/reddit\.com\/(?:r\/\w+\/comments\/\w+\/\w+\/(\w+)|user\/(\w+))/);
+  if (redditMatch) return redditMatch[1] || redditMatch[2] || 'reddit_user';
+  return 'unknown';
+}
+
+function extractPlatform(url: string): string {
+  if (!url) return 'unknown';
+  if (url.includes('reddit.com')) return 'Reddit';
+  if (url.includes('stocktwits.com')) return 'StockTwits';
+  if (url.includes('twitter.com') || url.includes('x.com')) return 'X/Twitter';
+  return 'Web';
 }

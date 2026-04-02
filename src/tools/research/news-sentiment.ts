@@ -117,18 +117,18 @@ async function analyzeSocialSentiment(
   try {
     const exa = new Exa(apiKey);
 
-    const searchResult = await exa.searchAndContents(`${ticker} stock`, {
+    const searchResult = await exa.searchAndContents(`$${ticker} stock sentiment discussion`, {
       numResults: 10,
       text: true,
-      includeDomains: ['twitter.com', 'x.com'],
+      includeDomains: ['reddit.com', 'stocktwits.com', 'twitter.com', 'x.com'],
       startPublishedDate: startDate.toISOString(),
-      category: 'tweet' as any,
     });
 
     const posts = (searchResult.results || []).map((r: any) => ({
       text: r.text?.slice(0, 300) || '',
       url: r.url || '',
       author: extractAuthor(r.url),
+      platform: extractPlatform(r.url),
       date: r.publishedDate || null,
     }));
 
@@ -147,7 +147,7 @@ async function analyzeSocialSentiment(
     }
 
     return {
-      platform: 'X/Twitter',
+      platforms: ['Reddit', 'StockTwits', 'X/Twitter'],
       post_count: posts.length,
       sentiment_breakdown: { positive, negative, neutral },
       social_score: posts.length > 0 ? Number(((positive - negative) / posts.length).toFixed(2)) : 0,
@@ -217,6 +217,17 @@ Respond with plain text only, no JSON.`;
 
 function extractAuthor(url: string): string {
   if (!url) return 'unknown';
-  const match = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
-  return match ? match[1] : 'unknown';
+  const twitterMatch = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
+  if (twitterMatch) return twitterMatch[1];
+  const redditMatch = url.match(/reddit\.com\/(?:r\/(\w+)|user\/(\w+))/);
+  if (redditMatch) return redditMatch[1] || redditMatch[2] || 'reddit_user';
+  return 'unknown';
+}
+
+function extractPlatform(url: string): string {
+  if (!url) return 'unknown';
+  if (url.includes('reddit.com')) return 'Reddit';
+  if (url.includes('stocktwits.com')) return 'StockTwits';
+  if (url.includes('twitter.com') || url.includes('x.com')) return 'X/Twitter';
+  return 'Web';
 }
