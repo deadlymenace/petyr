@@ -438,6 +438,23 @@ function scrollToBottom() {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+// Custom marked renderer: intercept ```chart code fences and render as Chart.js
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      if (lang === 'chart') {
+        const id = 'chart-' + Math.random().toString(36).slice(2, 9);
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el && typeof renderChartBlock === 'function') renderChartBlock(text, el);
+        }, 50);
+        return '<div class="chart-container" id="' + id + '"><canvas></canvas></div>';
+      }
+      return false; // fall through to default
+    }
+  }
+});
+
 function renderMarkdown(text) {
   return marked.parse(text || '');
 }

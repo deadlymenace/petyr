@@ -53,6 +53,11 @@ export function startServer(port: number) {
         return handleSettings(corsHeaders);
       }
 
+      // PDF/report download route
+      if (url.pathname.startsWith('/api/reports/') && req.method === 'GET') {
+        return handleReportDownload(url.pathname, corsHeaders);
+      }
+
       // Static file serving (with path traversal protection)
       let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
       const fullPath = resolve(publicDir, '.' + filePath);
@@ -168,5 +173,39 @@ function handleSettings(corsHeaders: Record<string, string>): Response {
   const provider = getSetting('provider', DEFAULT_PROVIDER);
   return new Response(JSON.stringify({ model, provider }), {
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
+
+function handleReportDownload(pathname: string, corsHeaders: Record<string, string>): Response {
+  const filename = pathname.replace('/api/reports/', '');
+
+  // Sanitize: only allow alphanumeric, dashes, underscores, dots
+  if (!/^[\w\-\.]+$/.test(filename) || filename.includes('..')) {
+    return new Response('Bad request', { status: 400, headers: corsHeaders });
+  }
+
+  const reportsDir = join(process.cwd(), '.petyr', 'reports');
+  const filePath = resolve(reportsDir, filename);
+
+  // Path traversal protection
+  const rel = relative(reportsDir, filePath);
+  if (rel.startsWith('..') || rel.includes('/') || rel.includes('\\')) {
+    return new Response('Forbidden', { status: 403, headers: corsHeaders });
+  }
+
+  if (!existsSync(filePath)) {
+    return new Response('Not found', { status: 404, headers: corsHeaders });
+  }
+
+  const content = readFileSync(filePath);
+  const isPdf = filename.endsWith('.pdf');
+  const contentType = isPdf ? 'application/pdf' : 'text/markdown; charset=utf-8';
+
+  return new Response(content, {
+    headers: {
+      'Content-Type': contentType,
+      'Content-Disposition': `inline; filename="${filename}"`,
+      ...corsHeaders,
+    },
   });
 }

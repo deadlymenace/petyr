@@ -172,7 +172,22 @@ Keep tables compact:
 - Tickers not names: "AAPL" not "Apple Inc."
 - Abbreviate: Rev, Op Inc, Net Inc, OCF, FCF, GM, OM, EPS
 - Numbers compact: 102.5B not $102,466,000,000
-- Omit units in cells if header has them`;
+- Omit units in cells if header has them
+
+## Data Visualization
+
+When presenting numerical trends (3+ data points) or comparisons, include a chart block alongside your table:
+
+\`\`\`chart
+{"type":"line","title":"AAPL Revenue ($B)","labels":["2021","2022","2023","2024","2025"],"datasets":[{"label":"Revenue","data":[366,394,383,391,410]}]}
+\`\`\`
+
+Rules:
+- type: "line" for trends, "bar" for comparisons, "pie" for breakdowns
+- Always include the same data as a table too (for accessibility)
+- Do NOT chart single data points or qualitative analysis
+- Keep labels short (years, quarters, tickers)
+- Use actual numbers from tool results, never fabricate data for charts`;
 }
 
 // ============================================================================
