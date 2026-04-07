@@ -117,6 +117,61 @@ marked.setOptions({
   gfm: true,
 });
 
+function sanitizeUrl(url) {
+  if (!url) return null;
+  const trimmed = String(url).trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('#')) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function sanitizeHtml(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content
+    .querySelectorAll('script, style, iframe, object, embed, link, meta')
+    .forEach(el => el.remove());
+
+  template.content.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(attr => {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith('on') || name === 'style' || name === 'srcdoc') {
+        el.removeAttribute(attr.name);
+        return;
+      }
+
+      if (name === 'href' || name === 'src' || name === 'xlink:href') {
+        const safeUrl = sanitizeUrl(attr.value);
+        if (!safeUrl) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+        el.setAttribute(attr.name, safeUrl);
+      }
+    });
+
+    if (el.tagName === 'A') {
+      el.setAttribute('rel', 'noopener noreferrer');
+      if (!el.getAttribute('href')) {
+        el.removeAttribute('target');
+      }
+    }
+  });
+
+  return template.innerHTML;
+}
+
 // =============================================================================
 // Initialization
 // =============================================================================
@@ -279,8 +334,8 @@ function addToolEvent(toolsEl, event, toolEvents) {
   const argsStr = formatToolArgs(event.args);
   el.innerHTML = `
     <div class="tool-icon"><div class="spinner"></div></div>
-    <span class="tool-name">${event.tool}</span>
-    <span class="tool-args">${argsStr}</span>
+    <span class="tool-name">${escapeHtml(event.tool)}</span>
+    <span class="tool-args">${escapeHtml(argsStr)}</span>
     <span class="tool-duration"></span>
   `;
 
@@ -456,7 +511,7 @@ marked.use({
 });
 
 function renderMarkdown(text) {
-  return marked.parse(text || '');
+  return sanitizeHtml(marked.parse(text || ''));
 }
 
 function escapeHtml(text) {

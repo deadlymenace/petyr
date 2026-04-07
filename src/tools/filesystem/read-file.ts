@@ -1,6 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { constants } from 'node:fs';
 import { access, readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { z } from 'zod';
 import { formatToolResult } from '../types.js';
 import { assertSandboxPath } from './sandbox.js';
@@ -13,6 +14,45 @@ const readFileSchema = z.object({
   limit: z.number().optional().describe('Maximum number of lines to read from the offset.'),
 });
 
+const BLOCKED_DIRS = new Set(['.aws', '.git', '.gnupg', '.petyr', '.ssh']);
+const BLOCKED_FILENAMES = new Set([
+    '.bash_history',
+    '.git-credentials',
+    '.netrc',
+    '.npmrc',
+    '.pypirc',
+    '.zsh_history',
+    'creds.json',
+    'creds.json.bak',
+    'gateway.json',
+    'id_ed25519',
+    'id_rsa',
+    'sessions.json',
+    'whatsapp.json',
+]);
+const BLOCKED_EXTENSIONS = ['.key', '.p12', '.pem', '.pfx'];
+
+function assertReadablePathAllowed(path: string, relativePath: string): void {
+    const normalizedRelative = relativePath.replace(/\\/g, '/');
+    const segments = normalizedRelative
+        .split('/')
+        .map((segment) => segment.trim().toLowerCase())
+        .filter(Boolean);
+    const name = basename(normalizedRelative || path).toLowerCase();
+
+    if (segments.some((segment) => BLOCKED_DIRS.has(segment))) {
+        throw new Error(`Reading sensitive paths is not allowed: ${path}`);
+    }
+
+    if (name === '.env' || (name.startsWith('.env.') && name !== '.env.example')) {
+        throw new Error(`Reading sensitive paths is not allowed: ${path}`);
+    }
+
+    if (BLOCKED_FILENAMES.has(name) || BLOCKED_EXTENSIONS.some((ext) => name.endsWith(ext))) {
+        throw new Error(`Reading sensitive paths is not allowed: ${path}`);
+    }
+}
+
 export const readFileTool = new DynamicStructuredTool({
   name: 'read_file',
   description:
@@ -20,11 +60,12 @@ export const readFileTool = new DynamicStructuredTool({
   schema: readFileSchema,
   func: async (input) => {
     const cwd = process.cwd();
-    const { resolved: sandboxPath } = await assertSandboxPath({
+    const { resolved: sandboxPath, relative: sandboxRelative } = await assertSandboxPath({
       filePath: input.path,
       cwd,
       root: cwd,
     });
+    assertReadablePathAllowed(input.path, sandboxRelative);
     const absolutePath = resolveReadPath(sandboxPath, cwd);
 
     await access(absolutePath, constants.R_OK);

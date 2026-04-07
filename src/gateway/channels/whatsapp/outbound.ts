@@ -7,7 +7,11 @@ import { loadGatewayConfig, resolveWhatsAppAccount } from '../../config.js';
 import { normalizeE164, toWhatsappJid } from '../../utils.js';
 
 function debugLog(msg: string) {
+  if (process.env.PETYR_GATEWAY_DEBUG !== '1') {
+    return;
+  }
   const logPath = path.join(os.homedir(), '.petyr', 'gateway-debug.log');
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
   fs.appendFileSync(logPath, `${new Date().toISOString()} ${msg}\n`);
 }
 

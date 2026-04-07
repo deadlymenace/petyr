@@ -13,12 +13,16 @@ import { isRecentInboundMessage } from './dedupe.js';
 import { readSelfId } from './auth-store.js';
 import { checkInboundAccessControl } from '../../access-control.js';
 import { resolveJidToPhoneJid, type LidLookup } from './lid.js';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const LOG_PATH = join(homedir(), '.petyr', 'gateway-debug.log');
 function debugLog(msg: string) {
+  if (process.env.PETYR_GATEWAY_DEBUG !== '1') {
+    return;
+  }
+  mkdirSync(dirname(LOG_PATH), { recursive: true });
   appendFileSync(LOG_PATH, `${new Date().toISOString()} ${msg}\n`);
 }
 

@@ -1,10 +1,12 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { z } from 'zod';
 import { formatToolResult } from '../types.js';
 import { logger } from '@/utils';
+import { assertSafeHttpUrl } from '../network/url-safety.js';
 
 let browser: Browser | null = null;
+let browserContext: BrowserContext | null = null;
 let page: Page | null = null;
 
 // Store refs from the last snapshot for action resolution
@@ -26,11 +28,27 @@ interface PageWithSnapshotForAI extends Page {
  */
 async function ensureBrowser(): Promise<Page> {
   if (!browser) {
-    browser = await chromium.launch({ headless: false });
+    browser = await chromium.launch({ headless: true });
+  }
+  if (!browserContext) {
+    browserContext = await browser.newContext();
+    await browserContext.route('**/*', async (route) => {
+      const requestUrl = route.request().url();
+      if (!requestUrl.startsWith('http://') && !requestUrl.startsWith('https://')) {
+        await route.continue();
+        return;
+      }
+
+      try {
+        await assertSafeHttpUrl(requestUrl);
+        await route.continue();
+      } catch {
+        await route.abort();
+      }
+    });
   }
   if (!page) {
-    const context = await browser.newContext();
-    page = await context.newPage();
+    page = await browserContext.newPage();
   }
   return page;
 }
@@ -42,6 +60,7 @@ async function closeBrowser(): Promise<void> {
   if (browser) {
     await browser.close();
     browser = null;
+    browserContext = null;
     page = null;
     currentRefs.clear();
   }
@@ -166,6 +185,7 @@ export const browserTool = new DynamicStructuredTool({
           if (!url) {
             return formatToolResult({ error: 'url is required for navigate action' });
           }
+          await assertSafeHttpUrl(url);
           const p = await ensureBrowser();
           // Use networkidle for better JS rendering on dynamic sites
           await p.goto(url, { timeout: 30000, waitUntil: 'networkidle' });
@@ -181,6 +201,7 @@ export const browserTool = new DynamicStructuredTool({
           if (!url) {
             return formatToolResult({ error: 'url is required for open action' });
           }
+          await assertSafeHttpUrl(url);
           const currentPage = await ensureBrowser();
           const context = currentPage.context();
           const newPage = await context.newPage();

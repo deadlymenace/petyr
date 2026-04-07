@@ -14,6 +14,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { formatToolResult } from '../types.js';
 import { wrapExternalContent, wrapWebContent } from './external-content.js';
+import { assertSafeHttpUrl } from '../network/url-safety.js';
 import {
   extractReadableContent,
   htmlToMarkdown,
@@ -188,12 +189,10 @@ async function fetchWithRedirects(params: {
   while (true) {
     let parsedUrl: URL;
     try {
-      parsedUrl = new URL(currentUrl);
-    } catch {
-      throw new Error("[Web Fetch] Invalid URL: must be http or https");
-    }
-    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-      throw new Error("[Web Fetch] Invalid URL: must be http or https");
+      parsedUrl = await assertSafeHttpUrl(currentUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`[Web Fetch] ${message}`);
     }
 
     const response = await fetch(parsedUrl.toString(), {
@@ -247,12 +246,10 @@ async function runWebFetch(params: {
 
   let parsedUrl: URL;
   try {
-    parsedUrl = new URL(params.url);
-  } catch {
-    throw new Error("[Web Fetch] Invalid URL: must be http or https");
-  }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error("[Web Fetch] Invalid URL: must be http or https");
+    parsedUrl = await assertSafeHttpUrl(params.url);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[Web Fetch] ${message}`);
   }
 
   const start = Date.now();
