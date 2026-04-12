@@ -12,7 +12,7 @@ import { buildFinalAnswerContext } from './final-answer-context.js';
 import { AgentToolExecutor } from './tool-executor.js';
 
 
-const DEFAULT_MODEL = 'gpt-5.2';
+const DEFAULT_MODEL = 'claude-sonnet-4-5';
 const DEFAULT_MAX_ITERATIONS = 6;
 
 /**
