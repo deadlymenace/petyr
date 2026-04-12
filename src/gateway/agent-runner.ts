@@ -2,21 +2,54 @@ import { Agent } from '../agent/agent.js';
 import { InMemoryChatHistory } from '../utils/in-memory-chat-history.js';
 import type { AgentEvent } from '../agent/types.js';
 
+// ---------------------------------------------------------------------------
+// Session eviction — TTL-based cleanup of idle sessions
+// ---------------------------------------------------------------------------
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes idle
+const MAX_SESSIONS = 100;
+
 type SessionState = {
   history: InMemoryChatHistory;
   tail: Promise<void>;
+  lastActivity: number;
 };
 
 const sessions = new Map<string, SessionState>();
 
+/** Evict sessions that are idle beyond TTL or exceed the max session count. */
+function evictStaleSessions(): void {
+  const now = Date.now();
+
+  // First pass: remove expired sessions
+  for (const [key, session] of sessions) {
+    if (now - session.lastActivity > SESSION_TTL_MS) {
+      sessions.delete(key);
+    }
+  }
+
+  // Second pass: if still over capacity, evict oldest (LRU)
+  if (sessions.size > MAX_SESSIONS) {
+    const sorted = [...sessions.entries()].sort((a, b) => a[1].lastActivity - b[1].lastActivity);
+    const toEvict = sorted.slice(0, sessions.size - MAX_SESSIONS);
+    for (const [key] of toEvict) {
+      sessions.delete(key);
+    }
+  }
+}
+
 function getSession(sessionKey: string, model: string): SessionState {
+  // Lightweight eviction check on every access
+  evictStaleSessions();
+
   const existing = sessions.get(sessionKey);
   if (existing) {
+    existing.lastActivity = Date.now();
     return existing;
   }
   const created: SessionState = {
     history: new InMemoryChatHistory(model),
     tail: Promise.resolve(),
+    lastActivity: Date.now(),
   };
   sessions.set(sessionKey, created);
   return created;

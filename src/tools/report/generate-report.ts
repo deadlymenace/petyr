@@ -1,10 +1,20 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { mkdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { callLlm } from '../../model/llm.js';
 import { formatToolResult } from '../types.js';
 import { renderReportToPdf } from './pdf-renderer.js';
+
+const PETYR_DIR = resolve(process.cwd(), '.petyr');
+
+/** Assert that a file path stays within .petyr/ before writing. */
+function assertWritePathSafe(filePath: string): void {
+  const resolved = resolve(filePath);
+  if (!resolved.startsWith(PETYR_DIR)) {
+    throw new Error('Write path resolves outside .petyr/ directory');
+  }
+}
 
 const GenerateReportInputSchema = z.object({
   title: z
@@ -102,11 +112,13 @@ ${input.format === 'text' ? 'Use plain text formatting.' : 'Use markdown formatt
           date: now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         });
         const pdfPath = join(reportsDir, pdfFilename);
+        assertWritePathSafe(pdfPath);
         writeFileSync(pdfPath, pdfBuffer);
 
         // Also save the markdown source
         const mdFilename = `${dateStr}_${slug}.md`;
         const mdPath = join(reportsDir, mdFilename);
+        assertWritePathSafe(mdPath);
         writeFileSync(mdPath, reportText, 'utf-8');
 
         return formatToolResult({
@@ -122,6 +134,7 @@ ${input.format === 'text' ? 'Use plain text formatting.' : 'Use markdown formatt
       const ext = input.format === 'text' ? 'txt' : 'md';
       const filename = `${dateStr}_${slug}.${ext}`;
       const filepath = join(reportsDir, filename);
+      assertWritePathSafe(filepath);
       writeFileSync(filepath, reportText, 'utf-8');
 
       return formatToolResult({

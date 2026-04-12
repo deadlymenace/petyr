@@ -1,11 +1,18 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { callApi } from '../finance/api.js';
 import { formatToolResult } from '../types.js';
 
-const WATCHLIST_PATH = join(process.cwd(), '.petyr', 'watchlist.json');
+const PETYR_DIR = resolve(process.cwd(), '.petyr');
+const WATCHLIST_PATH = join(PETYR_DIR, 'watchlist.json');
+
+// Sandbox validation — ensure write path stays within .petyr/
+const resolvedWatchlistPath = resolve(WATCHLIST_PATH);
+if (!resolvedWatchlistPath.startsWith(PETYR_DIR)) {
+  throw new Error('Watchlist path resolves outside .petyr/ directory');
+}
 
 interface WatchlistEntry {
   ticker: string;

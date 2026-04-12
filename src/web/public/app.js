@@ -110,6 +110,10 @@ const cancelBtn = document.getElementById('cancel-btn');
 const modelBadge = document.getElementById('model-badge');
 
 let isStreaming = false;
+let activeAbortController = null;
+
+// Unique session ID per browser tab — prevents shared state between users/tabs
+const SESSION_ID = 'web-' + Math.random().toString(36).slice(2, 11);
 
 // Configure marked for rendering
 marked.setOptions({
@@ -239,11 +243,16 @@ async function sendMessage() {
   // Track tool events for click-to-expand
   const toolEvents = new Map();
 
+  // Client-side abort controller — allows cancel button to immediately stop the fetch
+  const abortController = new AbortController();
+  activeAbortController = abortController;
+
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, session_id: SESSION_ID }),
+      signal: abortController.signal,
     });
 
     const reader = res.body.getReader();
@@ -272,9 +281,14 @@ async function sendMessage() {
       }
     }
   } catch (error) {
-    contentEl.innerHTML = renderMarkdown(`**Error:** ${error.message}`);
+    if (error.name === 'AbortError') {
+      contentEl.innerHTML = renderMarkdown('*Query cancelled.*');
+    } else {
+      contentEl.innerHTML = renderMarkdown(`**Error:** ${error.message}`);
+    }
   }
 
+  activeAbortController = null;
   setStreaming(false);
   scrollToBottom();
 }
@@ -469,8 +483,19 @@ function showStats(statsEl, event) {
 // =============================================================================
 
 async function cancelQuery() {
+  // Immediately abort the client-side fetch (stops the reader loop)
+  if (activeAbortController) {
+    activeAbortController.abort();
+    activeAbortController = null;
+  }
+
+  // Also tell the server to abort (cleans up server-side resources)
   try {
-    await fetch('/api/chat/cancel', { method: 'POST' });
+    await fetch('/api/chat/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: SESSION_ID }),
+    });
   } catch {
     // Ignore cancel errors
   }

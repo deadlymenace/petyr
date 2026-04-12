@@ -1,7 +1,47 @@
-import { existsSync, mkdirSync, appendFileSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, appendFileSync, readFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
 import { MAX_TOOL_RESULT_CHARS } from '../utils/tokens.js';
+
+// ---------------------------------------------------------------------------
+// Retention — auto-delete old scratchpad/cache files
+// ---------------------------------------------------------------------------
+const RETENTION_DAYS = parseInt(process.env.PETYR_SCRATCHPAD_RETENTION_DAYS || '7', 10);
+const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
+let lastCleanupRun = 0;
+const CLEANUP_COOLDOWN_MS = 60_000; // Run cleanup at most once per minute
+
+/** Delete files older than retention period in a directory. */
+export function cleanupOldFiles(dir: string, maxAgeMs: number = RETENTION_MS): number {
+  if (!existsSync(dir)) return 0;
+  const now = Date.now();
+  let deleted = 0;
+  for (const name of readdirSync(dir)) {
+    const filePath = join(dir, name);
+    try {
+      const stat = statSync(filePath);
+      if (stat.isFile() && now - stat.mtimeMs > maxAgeMs) {
+        unlinkSync(filePath);
+        deleted++;
+      }
+    } catch {
+      // Skip files we can't stat or delete
+    }
+  }
+  return deleted;
+}
+
+/** Run retention cleanup for scratchpad and cache directories (throttled). */
+function runRetentionCleanup(scratchpadDir: string): void {
+  const now = Date.now();
+  if (now - lastCleanupRun < CLEANUP_COOLDOWN_MS) return;
+  lastCleanupRun = now;
+
+  cleanupOldFiles(scratchpadDir, RETENTION_MS);
+  // Also clean cache directory if it exists
+  const cacheDir = join(process.cwd(), '.petyr', 'cache');
+  cleanupOldFiles(cacheDir, RETENTION_MS);
+}
 
 /**
  * Record of a tool call for external consumers (e.g., DoneEvent)
@@ -94,6 +134,9 @@ export class Scratchpad {
     if (!existsSync(this.scratchpadDir)) {
       mkdirSync(this.scratchpadDir, { recursive: true });
     }
+
+    // Run retention cleanup (throttled — at most once per minute)
+    runRetentionCleanup(this.scratchpadDir);
 
     const hash = createHash('md5').update(query).digest('hex').slice(0, 12);
     const now = new Date();

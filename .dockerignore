@@ -1,0 +1,7 @@
+node_modules
+.petyr
+.git
+.env
+.env.*
+.superdesign
+*.log

@@ -202,13 +202,19 @@ Rules:
  * @param originalQuery - The user's original query
  * @param fullToolResults - Formatted full tool results (or placeholder for cleared)
  * @param toolUsageStatus - Optional tool usage status for graceful exit mechanism
+ * @param conversationHistory - Optional formatted conversation history from prior turns
  */
 export function buildIterationPrompt(
   originalQuery: string,
   fullToolResults: string,
-  toolUsageStatus?: string | null
+  toolUsageStatus?: string | null,
+  conversationHistory?: string
 ): string {
   let prompt = `Query: ${originalQuery}`;
+
+  if (conversationHistory) {
+    prompt += `\n\n${conversationHistory}`;
+  }
 
   if (fullToolResults.trim()) {
     prompt += `
@@ -239,13 +245,22 @@ Continue working toward answering the query. If you have gathered actual content
  */
 export function buildFinalAnswerPrompt(
   originalQuery: string,
-  fullContextData: string
+  fullContextData: string,
+  conversationHistory?: string
 ): string {
-  return `Query: ${originalQuery}
+  let prompt = `Query: ${originalQuery}`;
+
+  if (conversationHistory) {
+    prompt += `\n\n${conversationHistory}`;
+  }
+
+  prompt += `
 
 Data retrieved from your tool calls:
 ${fullContextData}
 
 Answer the user's query using this data. Do not ask the user to provide additional data, paste values, or reference JSON/API internals. If data is incomplete, answer with what you have.`;
+
+  return prompt;
 }
 

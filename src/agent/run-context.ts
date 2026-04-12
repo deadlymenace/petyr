@@ -10,6 +10,8 @@ export interface RunContext {
   readonly tokenCounter: TokenCounter;
   readonly startTime: number;
   iteration: number;
+  /** Formatted relevant conversation history (populated once at run start) */
+  conversationHistory: string;
 }
 
 export function createRunContext(query: string): RunContext {
@@ -19,5 +21,6 @@ export function createRunContext(query: string): RunContext {
     tokenCounter: new TokenCounter(),
     startTime: Date.now(),
     iteration: 0,
+    conversationHistory: '',
   };
 }

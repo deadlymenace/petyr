@@ -66,8 +66,13 @@ export class Agent {
 
     const ctx = createRunContext(query);
 
+    // Load relevant conversation history (Q&A from prior turns)
+    ctx.conversationHistory = await this.loadConversationHistory(query, inMemoryHistory);
+
     // Build initial prompt with conversation history context
-    let currentPrompt = this.buildInitialPrompt(query, inMemoryHistory);
+    let currentPrompt = ctx.conversationHistory
+      ? `${query}\n\n${ctx.conversationHistory}`
+      : query;
 
     // Main agent loop
     while (ctx.iteration < this.maxIterations) {
@@ -119,9 +124,10 @@ export class Agent {
 
       // Build iteration prompt with full tool results (Anthropic-style)
       currentPrompt = buildIterationPrompt(
-        query, 
+        query,
         ctx.scratchpad.getToolResults(),
-        ctx.scratchpad.formatToolUsageForPrompt()
+        ctx.scratchpad.formatToolUsageForPrompt(),
+        ctx.conversationHistory
       );
     }
 
@@ -174,7 +180,7 @@ export class Agent {
     options?: { fallbackMessage?: string }
   ): AsyncGenerator<AgentEvent, void> {
     const fullContext = buildFinalAnswerContext(ctx.scratchpad);
-    const finalPrompt = buildFinalAnswerPrompt(ctx.query, fullContext);
+    const finalPrompt = buildFinalAnswerPrompt(ctx.query, fullContext, ctx.conversationHistory);
 
     yield { type: 'answer_start' };
     const { response, usage } = await this.callModel(finalPrompt, false);
@@ -211,23 +217,32 @@ export class Agent {
   }
 
   /**
-   * Build initial prompt with conversation history context if available
+   * Load relevant conversation history formatted for injection into prompts.
+   * Uses LLM-based relevance selection to include only pertinent prior turns.
+   * Returns empty string if no relevant history exists.
    */
-  private buildInitialPrompt(
+  private async loadConversationHistory(
     query: string,
     inMemoryChatHistory?: InMemoryChatHistory
-  ): string {
+  ): Promise<string> {
     if (!inMemoryChatHistory?.hasMessages()) {
-      return query;
+      return '';
     }
 
-    const userMessages = inMemoryChatHistory.getUserMessages();
-    if (userMessages.length === 0) {
-      return query;
+    try {
+      const relevant = await inMemoryChatHistory.selectRelevantMessages(query);
+      if (relevant.length === 0) {
+        return '';
+      }
+      const formatted = inMemoryChatHistory.formatForPlanning(relevant);
+      return `## Conversation History (relevant prior turns)\n\n${formatted}`;
+    } catch {
+      // Fall back to listing recent queries if relevance selection fails
+      const userMessages = inMemoryChatHistory.getUserMessages();
+      if (userMessages.length === 0) return '';
+      const historyContext = userMessages.slice(-5).map((msg, i) => `${i + 1}. ${msg}`).join('\n');
+      return `## Previous queries for context\n\n${historyContext}`;
     }
-
-    const historyContext = userMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n');
-    return `Current query to answer: ${query}\n\nPrevious user queries for context:\n${historyContext}`;
   }
 
 }
