@@ -86,9 +86,12 @@ ${input.format === 'text' ? 'Use plain text formatting.' : 'Use markdown formatt
         systemPrompt: 'You are a financial research analyst. Generate clear, professional reports from raw data. When data supports it, include chart code blocks for visual presentation.',
       });
 
-      const reportText = typeof response.content === 'string'
-        ? response.content
-        : JSON.stringify(response.content);
+      // callLlm returns string directly when no tools/outputSchema are provided
+      const reportText = typeof response === 'string'
+        ? response
+        : typeof response.content === 'string'
+          ? response.content
+          : JSON.stringify(response.content);
 
       // Generate filename
       const now = new Date();

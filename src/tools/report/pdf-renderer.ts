@@ -20,24 +20,34 @@ async function ensurePdfBrowser(): Promise<Browser> {
  * Uses Playwright to load the self-contained HTML and print to PDF.
  */
 export async function renderReportToPdf(params: ReportParams): Promise<Buffer> {
-  const browser = await ensurePdfBrowser();
+  let browser: Browser;
+  try {
+    browser = await ensurePdfBrowser();
+  } catch (err) {
+    // Reset cached browser on failure so next attempt retries
+    pdfBrowser = null;
+    throw new Error(`Failed to launch PDF browser: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   const page = await browser.newPage();
+  try {
+    const html = buildReportHtml(params);
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
 
-  const html = buildReportHtml(params);
-  await page.setContent(html, { waitUntil: 'networkidle' });
+    // Give Chart.js time to render canvases (only needed when charts exist)
+    await page.waitForTimeout(1500);
 
-  // Wait for Chart.js and marked.js to finish rendering
-  await page.waitForTimeout(1000);
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+      displayHeaderFooter: false,
+    });
 
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-    displayHeaderFooter: false,
-  });
-
-  await page.close();
-  return Buffer.from(pdfBuffer);
+    return Buffer.from(pdfBuffer);
+  } finally {
+    await page.close();
+  }
 }
 
 /**
