@@ -108,9 +108,14 @@ const queryInput = document.getElementById('query-input');
 const sendBtn = document.getElementById('send-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const modelBadge = document.getElementById('model-badge');
+const attachBtn = document.getElementById('attach-btn');
+const fileInput = document.getElementById('file-input');
+const attachmentChips = document.getElementById('attachment-chips');
+const dropZoneOverlay = document.getElementById('drop-zone-overlay');
 
 let isStreaming = false;
 let activeAbortController = null;
+let pendingFiles = []; // Files selected but not yet uploaded
 
 // Unique session ID per browser tab — prevents shared state between users/tabs
 const SESSION_ID = 'web-' + Math.random().toString(36).slice(2, 11);
@@ -208,11 +213,141 @@ async function init() {
   queryInput.addEventListener('input', autoResize);
   sendBtn.addEventListener('click', () => { if (!isStreaming) sendMessage(); });
   cancelBtn.addEventListener('click', cancelQuery);
+
+  // File attachment handlers
+  attachBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', handleFileSelect);
+
+  // Drag-and-drop on the chat container
+  initDragDrop();
 }
 
 function autoResize() {
   queryInput.style.height = 'auto';
   queryInput.style.height = Math.min(queryInput.scrollHeight, 120) + 'px';
+}
+
+// =============================================================================
+// File Attachment
+// =============================================================================
+
+const ALLOWED_EXTENSIONS = ['.pdf', '.csv', '.xlsx', '.xls', '.txt', '.md', '.json'];
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+const MAX_FILES = 5;
+
+function handleFileSelect(e) {
+  addFiles(Array.from(e.target.files));
+  fileInput.value = ''; // Reset so re-selecting same file works
+}
+
+function addFiles(files) {
+  for (const file of files) {
+    if (pendingFiles.length >= MAX_FILES) break;
+
+    // Extension check
+    const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
+    if (!ALLOWED_EXTENSIONS.includes(ext)) continue;
+
+    // Size check
+    if (file.size > MAX_FILE_SIZE) continue;
+
+    // Deduplicate by name
+    if (pendingFiles.some(f => f.name === file.name)) continue;
+
+    pendingFiles.push(file);
+  }
+  renderAttachmentChips();
+}
+
+function removeFile(index) {
+  pendingFiles.splice(index, 1);
+  renderAttachmentChips();
+}
+
+function renderAttachmentChips() {
+  attachmentChips.innerHTML = '';
+  pendingFiles.forEach((file, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'attachment-chip';
+    chip.innerHTML = `
+      <span class="chip-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      </span>
+      <span class="chip-name">${escapeHtml(file.name)}</span>
+      <button class="chip-remove" data-index="${i}" title="Remove">&times;</button>
+    `;
+    chip.querySelector('.chip-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeFile(i);
+    });
+    attachmentChips.appendChild(chip);
+  });
+}
+
+function clearAttachments() {
+  pendingFiles = [];
+  attachmentChips.innerHTML = '';
+}
+
+// =============================================================================
+// Drag and Drop
+// =============================================================================
+
+function initDragDrop() {
+  let dragCounter = 0;
+  const appEl = document.querySelector('.app');
+
+  appEl.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    dropZoneOverlay.classList.remove('hidden');
+  });
+
+  appEl.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      dropZoneOverlay.classList.add('hidden');
+    }
+  });
+
+  appEl.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  appEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    dropZoneOverlay.classList.add('hidden');
+    if (e.dataTransfer?.files?.length) {
+      addFiles(Array.from(e.dataTransfer.files));
+    }
+  });
+}
+
+// =============================================================================
+// Upload Files
+// =============================================================================
+
+async function uploadFiles() {
+  if (pendingFiles.length === 0) return [];
+
+  const formData = new FormData();
+  pendingFiles.forEach(f => formData.append('files', f));
+
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(err.error || `Upload failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  return data.files.map(f => f.id);
 }
 
 // =============================================================================
@@ -226,8 +361,11 @@ async function sendMessage() {
   // Hide welcome, show messages
   welcomeEl.classList.add('hidden');
 
+  // Capture file names for the user message display
+  const attachedFileNames = pendingFiles.map(f => f.name);
+
   // Add user message
-  appendUserMessage(query);
+  appendUserMessage(query, attachedFileNames);
   queryInput.value = '';
   queryInput.style.height = 'auto';
 
@@ -248,10 +386,20 @@ async function sendMessage() {
   activeAbortController = abortController;
 
   try {
+    // Upload files first if any are attached
+    let fileIds = [];
+    if (pendingFiles.length > 0) {
+      fileIds = await uploadFiles();
+      clearAttachments();
+    }
+
+    const chatBody = { query, session_id: SESSION_ID };
+    if (fileIds.length > 0) chatBody.file_ids = fileIds;
+
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, session_id: SESSION_ID }),
+      body: JSON.stringify(chatBody),
       signal: abortController.signal,
     });
 
@@ -286,6 +434,7 @@ async function sendMessage() {
     } else {
       contentEl.innerHTML = renderMarkdown(`**Error:** ${error.message}`);
     }
+    clearAttachments();
   }
 
   activeAbortController = null;
@@ -446,10 +595,22 @@ function clearThinking(contentEl) {
 // Message Elements
 // =============================================================================
 
-function appendUserMessage(text) {
+function appendUserMessage(text, fileNames) {
   const div = document.createElement('div');
   div.className = 'message message-user';
-  div.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+
+  let attachmentsHtml = '';
+  if (fileNames && fileNames.length > 0) {
+    const tags = fileNames.map(name =>
+      `<span class="message-attachment-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        ${escapeHtml(name)}
+      </span>`
+    ).join('');
+    attachmentsHtml = `<div class="message-attachments">${tags}</div>`;
+  }
+
+  div.innerHTML = `<div class="message-content">${attachmentsHtml}${escapeHtml(text)}</div>`;
   messagesEl.appendChild(div);
 }
 
@@ -511,6 +672,7 @@ function setStreaming(streaming) {
   cancelBtn.classList.toggle('hidden', !streaming);
   sendBtn.disabled = streaming;
   queryInput.disabled = streaming;
+  attachBtn.disabled = streaming;
   if (!streaming) queryInput.focus();
 }
 

@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { runAgentForMessage } from '../gateway/agent-runner.js';
 import { getSetting } from '../utils/config.js';
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from '../model/llm.js';
+import { parseUploadedFile } from './upload-handler.js';
 import type { AgentEvent } from '../agent/types.js';
 import {
   loadInviteCodes,
@@ -75,6 +76,37 @@ const allowedHostRe = buildAllowedHostPattern();
 // Invite codes — loaded once at startup
 // ---------------------------------------------------------------------------
 const inviteCodes = loadInviteCodes();
+
+// ── Upload storage ──────────────────────────────────────────────────────────
+type ParsedFile = { filename: string; text: string; uploadedAt: number };
+const uploadStore = new Map<string, ParsedFile>();
+
+const UPLOAD_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+const MAX_FILES_PER_UPLOAD = 5;
+const ALLOWED_EXTENSIONS = new Set(['.pdf', '.csv', '.xlsx', '.xls', '.txt', '.md', '.json']);
+
+function cleanExpiredUploads() {
+  const now = Date.now();
+  for (const [key, entry] of uploadStore) {
+    if (now - entry.uploadedAt > UPLOAD_TTL_MS) {
+      uploadStore.delete(key);
+    }
+  }
+}
+
+/** Build the file context block that gets prepended to the user query. */
+function buildFileContext(sessionId: string, fileIds: string[]): string | undefined {
+  const sections: string[] = [];
+  for (const fileId of fileIds) {
+    const entry = uploadStore.get(`${sessionId}:${fileId}`);
+    if (entry) {
+      sections.push(`### [${entry.filename}]\n${entry.text}`);
+    }
+  }
+  if (sections.length === 0) return undefined;
+  return `## Uploaded Documents\n\n${sections.join('\n\n')}`;
+}
 
 export function startServer(port: number) {
   const publicDir = join(import.meta.dir, 'public');
@@ -160,6 +192,10 @@ export function startServer(port: number) {
         return handleCancel(req, corsHeaders);
       }
 
+      if (url.pathname === '/api/upload' && req.method === 'POST') {
+        return handleUpload(req, corsHeaders);
+      }
+
       if (url.pathname === '/api/settings' && req.method === 'GET') {
         return handleSettings(corsHeaders);
       }
@@ -195,6 +231,84 @@ export function startServer(port: number) {
   console.log(`\n  Petyr Web UI running at http://localhost:${port}\n`);
 }
 
+// ── Upload handler ──────────────────────────────────────────────────────────
+
+async function handleUpload(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  const jsonHeaders = { 'Content-Type': 'application/json', ...corsHeaders };
+
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid multipart body' }), {
+      status: 400, headers: jsonHeaders,
+    });
+  }
+
+  const sessionId = (formData.get('session_id') as string) || 'web-default';
+  const files = formData.getAll('files') as File[];
+
+  if (files.length === 0) {
+    return new Response(JSON.stringify({ error: 'No files provided' }), {
+      status: 400, headers: jsonHeaders,
+    });
+  }
+
+  if (files.length > MAX_FILES_PER_UPLOAD) {
+    return new Response(JSON.stringify({ error: `Maximum ${MAX_FILES_PER_UPLOAD} files per upload` }), {
+      status: 400, headers: jsonHeaders,
+    });
+  }
+
+  // Clean expired entries on each upload
+  cleanExpiredUploads();
+
+  const results: { id: string; name: string; size: number; type: string; preview: string }[] = [];
+
+  for (const file of files) {
+    if (!(file instanceof File)) continue;
+
+    // Size check
+    if (file.size > MAX_FILE_SIZE) {
+      return new Response(JSON.stringify({ error: `File "${file.name}" exceeds 25 MB limit` }), {
+        status: 413, headers: jsonHeaders,
+      });
+    }
+
+    // Extension check
+    const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return new Response(JSON.stringify({ error: `File type "${ext}" is not supported` }), {
+        status: 400, headers: jsonHeaders,
+      });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const parsed = await parseUploadedFile(buffer, file.type, file.name);
+
+    const fileId = crypto.randomUUID();
+    uploadStore.set(`${sessionId}:${fileId}`, {
+      filename: file.name,
+      text: parsed.text,
+      uploadedAt: Date.now(),
+    });
+
+    results.push({
+      id: fileId,
+      name: file.name,
+      size: file.size,
+      type: parsed.type,
+      preview: parsed.text.slice(0, 200),
+    });
+  }
+
+  return new Response(JSON.stringify({ files: results }), {
+    headers: jsonHeaders,
+  });
+}
+
+// ── Chat handler ────────────────────────────────────────────────────────────
+
 async function handleChat(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
   // Enforce request size limit
   const contentLength = parseInt(req.headers.get('Content-Length') || '0', 10);
@@ -205,7 +319,7 @@ async function handleChat(req: Request, corsHeaders: Record<string, string>): Pr
     });
   }
 
-  let body: { query: string; session_id?: string };
+  let body: { query: string; session_id?: string; file_ids?: string[] };
   try {
     const rawText = await req.text();
     if (rawText.length > MAX_BODY_BYTES) {
@@ -233,6 +347,11 @@ async function handleChat(req: Request, corsHeaders: Record<string, string>): Pr
   const model = getSetting('modelId', DEFAULT_MODEL);
   const provider = getSetting('provider', DEFAULT_PROVIDER);
 
+  // Build file context from uploaded file IDs
+  const fileContext = body.file_ids?.length
+    ? buildFileContext(sessionId, body.file_ids)
+    : undefined;
+
   // Set up abort controller for this session
   const controller = new AbortController();
   activeControllers.set(sessionId, controller);
@@ -254,6 +373,7 @@ async function handleChat(req: Request, corsHeaders: Record<string, string>): Pr
           model,
           modelProvider: provider,
           signal: controller.signal,
+          fileContext,
           onEvent: (event) => {
             sendEvent(event);
           },

@@ -63,6 +63,7 @@ export type AgentRunRequest = {
   maxIterations?: number;
   signal?: AbortSignal;
   onEvent?: (event: AgentEvent) => void | Promise<void>;
+  fileContext?: string;
 };
 
 export async function runAgentForMessage(req: AgentRunRequest): Promise<string> {
@@ -70,14 +71,17 @@ export async function runAgentForMessage(req: AgentRunRequest): Promise<string> 
   let finalAnswer = '';
 
   const run = async () => {
-    session.history.saveUserQuery(req.query);
+    const fullQuery = req.fileContext
+      ? `${req.fileContext}\n\n---\n\nUser query: ${req.query}`
+      : req.query;
+    session.history.saveUserQuery(fullQuery);
     const agent = Agent.create({
       model: req.model,
       modelProvider: req.modelProvider,
       maxIterations: req.maxIterations ?? 6,
       signal: req.signal,
     });
-    for await (const event of agent.run(req.query, session.history)) {
+    for await (const event of agent.run(fullQuery, session.history)) {
       await req.onEvent?.(event);
       if (event.type === 'done') {
         finalAnswer = event.answer;
