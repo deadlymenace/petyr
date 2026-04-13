@@ -105,7 +105,7 @@ export class AgentToolExecutor {
       // Create a progress channel so subagent tools can stream status updates
       const channel = createProgressChannel();
       const config = {
-        metadata: { onProgress: channel.emit },
+        metadata: { onProgress: channel.emit, scratchpad: ctx.scratchpad },
         ...(this.signal ? { signal: this.signal } : {}),
       };
 
