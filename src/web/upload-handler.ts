@@ -39,10 +39,11 @@ function toMarkdownTable(rows: string[][]): string {
   const header = rows[0];
   const divider = header.map(() => '---');
   const dataRows = rows.slice(1, MAX_TABLE_ROWS + 1);
+  const escapeCell = (c: unknown) => String(c ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
   const lines = [
-    '| ' + header.join(' | ') + ' |',
+    '| ' + header.map(escapeCell).join(' | ') + ' |',
     '| ' + divider.join(' | ') + ' |',
-    ...dataRows.map(r => '| ' + r.map(c => String(c ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ')).join(' | ') + ' |'),
+    ...dataRows.map(r => '| ' + r.map(escapeCell).join(' | ') + ' |'),
   ];
   if (rows.length - 1 > MAX_TABLE_ROWS) {
     lines.push(`\n*(truncated — showing ${MAX_TABLE_ROWS} of ${rows.length - 1} rows)*`);

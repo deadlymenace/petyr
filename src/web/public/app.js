@@ -334,6 +334,7 @@ async function uploadFiles() {
   if (pendingFiles.length === 0) return [];
 
   const formData = new FormData();
+  formData.append('session_id', SESSION_ID);
   pendingFiles.forEach(f => formData.append('files', f));
 
   const res = await fetch('/api/upload', {

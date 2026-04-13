@@ -571,9 +571,14 @@ html, body {
   color: var(--text-secondary);
 }
 
-.attach-btn:hover {
+.attach-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
+}
+
+.attach-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Attachment Chips */
@@ -582,6 +587,7 @@ html, body {
   flex-wrap: wrap;
   gap: 6px;
   padding: 0 4px;
+  margin-bottom: 8px;
 }
 
 .attachment-chips:empty {

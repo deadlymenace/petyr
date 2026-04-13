@@ -84,6 +84,7 @@ const uploadStore = new Map<string, ParsedFile>();
 const UPLOAD_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 const MAX_FILES_PER_UPLOAD = 5;
+const MAX_UPLOAD_STORE_ENTRIES = 500;
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.csv', '.xlsx', '.xls', '.txt', '.md', '.json']);
 
 function cleanExpiredUploads() {
@@ -92,6 +93,12 @@ function cleanExpiredUploads() {
     if (now - entry.uploadedAt > UPLOAD_TTL_MS) {
       uploadStore.delete(key);
     }
+  }
+  // Hard cap: evict oldest entries if over limit
+  if (uploadStore.size > MAX_UPLOAD_STORE_ENTRIES) {
+    const sorted = [...uploadStore.entries()].sort((a, b) => a[1].uploadedAt - b[1].uploadedAt);
+    const toEvict = sorted.slice(0, uploadStore.size - MAX_UPLOAD_STORE_ENTRIES);
+    for (const [key] of toEvict) uploadStore.delete(key);
   }
 }
 
