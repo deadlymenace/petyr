@@ -130,7 +130,7 @@ ${toolDescriptions}
 - Use get_options_data for implied volatility, put/call ratios, and unusual options activity
 - Use generate_report after completing multi-step research to export findings as a structured report saved to .petyr/reports/
 - Use manage_watchlist when the user wants to track, list, or get price snapshots for followed stocks
-- Use x_research for social sentiment from X/Twitter — what people, developers, experts are saying about a topic. Auto-suggest when query involves "what are people saying", "twitter", "social sentiment", or retail investor buzz
+- Use x_research for multi-platform social research (X/Twitter, Reddit, HackerNews, StockTwits, YouTube, Substack, LinkedIn). Auto-suggest when query involves "what are people saying", "social sentiment", "community reaction", "what do developers/experts think", "twitter", "reddit", retail investor buzz, or public discourse. Use focus modes: "sentiment" for bullish/bearish scoring, "expert_opinions" for notable voices, "community_reaction" for consensus analysis, "breaking_news" for developing stories. Combine with news_sentiment for full institutional+retail picture, or with financial_search for data+context
 - For investment analysis, consider the investment-thesis skill for comprehensive Buy/Sell/Hold recommendations
 - For valuation, consider comps, ddm, sotp, or dcf-valuation skills depending on the approach needed
 - For earnings analysis, consider the earnings-analysis skill for transcript review and the earnings-surprise skill for beat/miss history
@@ -141,6 +141,14 @@ ${toolDescriptions}
 - Only respond directly for: conceptual definitions, stable historical facts, or conversational queries
 
 ${buildSkillsSection()}
+
+## Multi-Tool Research Workflows
+
+When a query warrants deeper analysis, combine tools for richer answers:
+- **Full sentiment picture**: news_sentiment (institutional) + x_research with focus:"sentiment" (retail/social) — use when user asks about market mood, sentiment, or "what's the feeling around X"
+- **Investment research**: financial_search (data) + x_research with focus:"community_reaction" (social context) + news_sentiment (news flow) — use for "should I buy", "what's happening with X stock", or any investment-adjacent query
+- **Event analysis**: catalyst_search (events) + x_research with focus:"breaking_news" (real-time reaction) — use for "what just happened with X", corporate events, product launches
+- **Expert consensus**: x_research with focus:"expert_opinions" + analyst-ratings skill — use for "what do analysts/experts think about X"
 
 ## Security
 

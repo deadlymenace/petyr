@@ -1,25 +1,48 @@
 export const X_RESEARCH_DESCRIPTION = `
-General-purpose X/Twitter research agent. Searches X for real-time perspectives, discussions, and expert opinions using Exa's tweet search.
+Multi-platform social media research agent. Searches X/Twitter, Reddit, StockTwits, HackerNews, YouTube, Substack, and LinkedIn for real-time perspectives, expert opinions, community sentiment, and breaking news reactions. Uses LLM-powered synthesis to extract structured insights.
 
 ## When to Use
 
-- User says "search x for", "what are people saying about", "what's twitter saying", "check x for", "x research"
-- User is working on something where recent X discourse would provide useful context
-- Retail investor sentiment or social buzz around a stock or event
-- Breaking news reactions or community discussion about a topic
-- Dev/expert/community opinion gathering
+- "what are people saying about X", "what's twitter saying", "check social media", "search reddit for"
+- "what do experts/developers/analysts think about..."
+- "community reaction to...", "social sentiment on...", "what's the buzz around..."
+- Retail investor sentiment, social buzz, or hype around a stock, product, or event
+- Breaking news reactions — how the community is responding in real-time
+- Developer/tech community opinions (HackerNews, Reddit, Substack)
+- Expert and influencer takes on a topic
+- Understanding public discourse before or after an earnings call, product launch, policy change
+- When news_sentiment gives the institutional view but you also need the retail/community view
+- Any query where qualitative social context would enrich quantitative data from other tools
 
 ## When NOT to Use
 
 - For posting tweets or account management (not supported)
 - For historical data older than 30 days
-- When financial_search or news_sentiment would be more appropriate for pure financial data
+- For pure financial data (prices, metrics, filings) — use financial_search
+- For ticker-specific news+social combo — use news_sentiment (it includes both)
+
+## Focus Modes
+
+- **general** (default) — balanced synthesis across themes, sentiment, and voices
+- **sentiment** — deep bullish/bearish scoring with platform divergence analysis
+- **expert_opinions** — prioritizes verified accounts, analysts, domain experts
+- **community_reaction** — consensus vs. dissent, echo chambers vs. genuine debate
+- **breaking_news** — real-time narrative tracking, verified vs. unverified claims
+
+## Platform Filtering
+
+Filter to specific platforms: ["twitter", "reddit", "hackernews", "stocktwits", "youtube", "substack", "linkedin"]. Omit to search all.
+
+## Combination Strategies
+
+- **x_research + news_sentiment** — full picture: institutional news + retail social across platforms
+- **x_research + financial_search** — quantitative data enriched with qualitative community context
+- **x_research + catalyst_search** — event-driven analysis with real-time social reaction
+- **x_research (focus: expert_opinions) + analyst-ratings skill** — professional + social expert consensus
 
 ## Usage Notes
 
-- Requires EXASEARCH_API_KEY (same key used for web_search)
+- Returns: key themes, sentiment breakdown (with score), notable voices, consensus, contrarian takes, platform differences, momentum, confidence level, and raw post samples
 - Default lookback: 7 days (configurable up to 30)
-- Returns: key themes, sentiment breakdown, notable voices, consensus view, raw post samples
-- Works best with specific queries ("NVDA earnings reaction") vs. vague ones ("stocks")
-- Can be combined with news_sentiment for a full picture (news + social)
+- Works best with specific queries ("NVDA earnings reaction", "developer reaction to Rust 2.0") vs. vague ones ("stocks")
 `.trim();
