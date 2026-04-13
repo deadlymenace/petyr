@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
+import { randomBytes } from 'node:crypto';
 
 export type SessionEntry = {
   sessionKey: string;
@@ -35,7 +36,10 @@ export function saveSessionStore(path: string, store: SessionStore): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(path, JSON.stringify(store, null, 2), 'utf8');
+  // Atomic write: write to temp file then rename
+  const tmpPath = path + '.' + randomBytes(4).toString('hex') + '.tmp';
+  writeFileSync(tmpPath, JSON.stringify(store, null, 2), 'utf8');
+  renameSync(tmpPath, path);
 }
 
 export function upsertSessionMeta(params: {

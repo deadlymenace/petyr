@@ -23,6 +23,7 @@ type ToolExecutionEvent =
   | ToolLimitEvent;
 
 const TOOLS_REQUIRING_APPROVAL = ['write_file', 'edit_file'] as const;
+const TOOL_TIMEOUT_MS = 120_000; // 2 minute timeout per tool invocation
 
 /**
  * Executes tool calls and emits streaming tool lifecycle events.
@@ -75,9 +76,8 @@ export class AgentToolExecutor {
         return;
       }
       if (decision === 'allow-session') {
-        for (const name of TOOLS_REQUIRING_APPROVAL) {
-          this.sessionApprovedTools.add(name);
-        }
+        // Only approve the specific tool, not all sensitive tools
+        this.sessionApprovedTools.add(toolName);
       }
     }
 
@@ -109,8 +109,14 @@ export class AgentToolExecutor {
         ...(this.signal ? { signal: this.signal } : {}),
       };
 
-      // Launch tool invocation -- closes the channel when it settles
-      const toolPromise = tool.invoke(toolArgs, config).then(
+      // Launch tool invocation with timeout — closes the channel when it settles
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Tool '${toolName}' timed out after ${TOOL_TIMEOUT_MS / 1000}s`)), TOOL_TIMEOUT_MS)
+      );
+      const toolPromise = Promise.race([
+        tool.invoke(toolArgs, config),
+        timeoutPromise,
+      ]).then(
         (raw) => {
           channel.close();
           return raw;

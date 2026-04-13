@@ -1,10 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
-import { randomInt } from 'node:crypto';
+import { randomInt, randomBytes } from 'node:crypto';
 import { isSelfChatMode, normalizeE164 } from './utils.js';
 
 const PAIRING_REPLY_HISTORY_GRACE_MS = 30_000;
+const PAIRING_CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_PAIRING_REQUESTS = 500; // cap store size to prevent unbounded growth
 
 type PairingRequest = {
   phone: string;
@@ -39,20 +41,45 @@ function savePairingStore(store: PairingStore): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(path, JSON.stringify(store, null, 2), 'utf8');
+  // Atomic write: write to temp file then rename
+  const tmpPath = path + '.' + randomBytes(4).toString('hex') + '.tmp';
+  writeFileSync(tmpPath, JSON.stringify(store, null, 2), 'utf8');
+  renameSync(tmpPath, path);
 }
 
 export function createPairingCode(): string {
   return String(randomInt(100000, 999999));
 }
 
+/** Remove expired pairing requests from the store. */
+function purgeExpiredPairings(store: PairingStore): PairingStore {
+  const now = Date.now();
+  const cleaned: PairingStore = {};
+  for (const [key, req] of Object.entries(store)) {
+    if (now - req.createdAt < PAIRING_CODE_TTL_MS) {
+      cleaned[key] = req;
+    }
+  }
+  return cleaned;
+}
+
 export function recordPairingRequest(phone: string): PairingRequest {
   const normalized = normalizeE164(phone);
-  const store = loadPairingStore();
+  let store = purgeExpiredPairings(loadPairingStore());
+
   const existing = store[normalized];
   if (existing) {
+    savePairingStore(store);
     return existing;
   }
+
+  // Cap store size to prevent unbounded growth from unapproved numbers
+  if (Object.keys(store).length >= MAX_PAIRING_REQUESTS) {
+    // Evict oldest entry
+    const oldest = Object.entries(store).sort((a, b) => a[1].createdAt - b[1].createdAt)[0];
+    if (oldest) delete store[oldest[0]];
+  }
+
   const request: PairingRequest = {
     phone: normalized,
     code: createPairingCode(),

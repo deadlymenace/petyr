@@ -3,6 +3,7 @@
  * When PETYR_INVITE_CODES is set, requires a valid code to access the app.
  * Stores access in an HttpOnly cookie for 7 days.
  */
+import { timingSafeEqual } from 'crypto';
 
 const COOKIE_NAME = 'petyr_access';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
@@ -13,12 +14,28 @@ export function loadInviteCodes(): string[] {
   return raw.split(',').map(c => c.trim()).filter(Boolean);
 }
 
+/** Constant-time string comparison to prevent timing attacks. */
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    // Compare against same-length dummy to avoid length leakage
+    timingSafeEqual(Buffer.from(a), Buffer.from(a));
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+/** Check if a submitted code matches any valid code (timing-safe). */
+export function hasValidInviteCode(submitted: string, validCodes: string[]): boolean {
+  return validCodes.some(code => safeCompare(submitted, code));
+}
+
 /** Check if request has a valid invite cookie. */
 export function hasValidAccess(req: Request, validCodes: string[]): boolean {
   const cookieHeader = req.headers.get('Cookie') || '';
   const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
   if (!match) return false;
-  return validCodes.includes(decodeURIComponent(match[1]));
+  const submitted = decodeURIComponent(match[1]);
+  return validCodes.some(code => safeCompare(submitted, code));
 }
 
 /** Parse invite code from query string (?code=XXX). */
@@ -124,7 +141,7 @@ export function renderInviteForm(error?: string): string {
     <input class="gate-input" type="text" name="code" placeholder="XXXXXX" autocomplete="off" autofocus required maxlength="32">
     <button class="gate-btn" type="submit">Access Petyr</button>
   </form>
-  ${error ? `<div class="gate-error">${error}</div>` : ''}
+  ${error ? `<div class="gate-error">${error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</div>` : ''}
 </div>
 </body>
 </html>`;

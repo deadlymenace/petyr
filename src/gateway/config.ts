@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { normalizeE164 } from './utils.js';
 
@@ -33,6 +34,8 @@ const GatewayConfigSchema = z.object({
       logLevel: z.enum(['silent', 'error', 'info', 'debug']).optional(),
       heartbeatSeconds: z.number().optional(),
       reconnect: ReconnectSchema.optional(),
+      model: z.string().optional(),
+      modelProvider: z.string().optional(),
     })
     .optional(),
   channels: z
@@ -74,6 +77,8 @@ export type GatewayConfig = {
       jitter?: number;
       maxAttempts?: number;
     };
+    model?: string;
+    modelProvider?: string;
   };
   channels: {
     whatsapp: {
@@ -126,6 +131,8 @@ export function loadGatewayConfig(overridePath?: string): GatewayConfig {
       logLevel: parsed.gateway?.logLevel ?? 'info',
       heartbeatSeconds: parsed.gateway?.heartbeatSeconds,
       reconnect: parsed.gateway?.reconnect,
+      model: parsed.gateway?.model,
+      modelProvider: parsed.gateway?.modelProvider,
     },
     channels: {
       whatsapp: {
@@ -144,7 +151,10 @@ export function saveGatewayConfig(config: GatewayConfig, overridePath?: string):
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(path, JSON.stringify(config, null, 2), 'utf8');
+  // Atomic write: write to temp file then rename
+  const tmpPath = path + '.' + randomBytes(4).toString('hex') + '.tmp';
+  writeFileSync(tmpPath, JSON.stringify(config, null, 2), 'utf8');
+  renameSync(tmpPath, path);
 }
 
 export function listWhatsAppAccountIds(cfg: GatewayConfig): string[] {

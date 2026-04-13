@@ -35,6 +35,8 @@ Return only message IDs that contain information directly useful for answering t
  * Manages in-memory conversation history for multi-turn conversations.
  * Stores user queries, final answers, and LLM-generated summaries.
  */
+const MAX_HISTORY_MESSAGES = 50;
+
 export class InMemoryChatHistory {
   private messages: Message[] = [];
   private model: string;
@@ -88,6 +90,11 @@ Generate a brief 1-2 sentence summary of this answer.`;
   saveUserQuery(query: string): void {
     // Clear the relevance cache since message history has changed
     this.relevantMessagesByQuery.clear();
+
+    // Evict oldest messages if over capacity
+    if (this.messages.length >= MAX_HISTORY_MESSAGES) {
+      this.messages = this.messages.slice(-Math.floor(MAX_HISTORY_MESSAGES / 2));
+    }
 
     this.messages.push({
       id: this.messages.length,

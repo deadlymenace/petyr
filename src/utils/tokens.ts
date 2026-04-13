@@ -5,11 +5,11 @@
 
 /**
  * Rough token estimation based on character count.
- * JSON is denser than prose, so we use ~3.5 chars per token.
- * This is conservative - better to underestimate available space.
+ * Uses ~4 chars per token as a standard heuristic for mixed content.
+ * This is conservative - better to overestimate token usage to avoid context overflow.
  */
 export function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 3.5);
+  return Math.ceil(text.length / 4);
 }
 
 /**

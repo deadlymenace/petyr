@@ -6,7 +6,12 @@ import { MAX_TOOL_RESULT_CHARS } from '../utils/tokens.js';
 // ---------------------------------------------------------------------------
 // Retention — auto-delete old scratchpad/cache files
 // ---------------------------------------------------------------------------
-const RETENTION_DAYS = parseInt(process.env.PETYR_SCRATCHPAD_RETENTION_DAYS || '7', 10);
+const MIN_RETENTION_DAYS = 1;
+const MAX_RETENTION_DAYS = 365;
+const rawRetentionDays = parseInt(process.env.PETYR_SCRATCHPAD_RETENTION_DAYS || '7', 10);
+const RETENTION_DAYS = Number.isFinite(rawRetentionDays)
+  ? Math.max(MIN_RETENTION_DAYS, Math.min(MAX_RETENTION_DAYS, rawRetentionDays))
+  : 7;
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
 let lastCleanupRun = 0;
 const CLEANUP_COOLDOWN_MS = 60_000; // Run cleanup at most once per minute

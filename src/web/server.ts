@@ -8,6 +8,7 @@ import type { AgentEvent } from '../agent/types.js';
 import {
   loadInviteCodes,
   hasValidAccess,
+  hasValidInviteCode,
   parseInviteCode,
   buildAccessCookie,
   renderInviteForm,
@@ -26,17 +27,33 @@ const MIME_TYPES: Record<string, string> = {
 // Track active requests for cancellation
 const activeControllers = new Map<string, AbortController>();
 
+// Limit concurrent SSE connections
+const MAX_CONCURRENT_STREAMS = 20;
+
+// Security headers applied to every response
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
 // ---------------------------------------------------------------------------
 // Rate limiting — in-memory, per IP, 20 requests per minute
 // ---------------------------------------------------------------------------
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAP_CAP = 10_000;
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = rateLimits.get(ip);
   if (!entry || now >= entry.resetAt) {
+    // Hard cap on map size to prevent memory exhaustion from spoofed IPs
+    if (rateLimits.size >= RATE_LIMIT_MAP_CAP && !rateLimits.has(ip)) {
+      return true; // Reject new IPs when map is full
+    }
     rateLimits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return false;
   }
@@ -44,12 +61,14 @@ function isRateLimited(ip: string): boolean {
   return entry.count > RATE_LIMIT_MAX;
 }
 
-// Periodically clean up expired entries (every 5 minutes)
+// Periodically clean up expired rate limits and upload entries (every 5 minutes)
 setInterval(() => {
   const now = Date.now();
   for (const [ip, entry] of rateLimits) {
     if (now >= entry.resetAt) rateLimits.delete(ip);
   }
+  // Also clean expired uploads periodically
+  cleanExpiredUploads();
 }, 5 * 60_000);
 
 // ---------------------------------------------------------------------------
@@ -60,13 +79,17 @@ const MAX_BODY_BYTES = 50_000; // 50 KB
 // ---------------------------------------------------------------------------
 // CORS — allow configured hosts
 // ---------------------------------------------------------------------------
+function escapeRegexChars(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function buildAllowedHostPattern(): RegExp {
   const hosts = (process.env.PETYR_ALLOWED_HOSTS || 'localhost,127.0.0.1')
     .split(',')
     .map(h => h.trim())
     .filter(Boolean);
-  // Escape dots for regex, join with |
-  const escaped = hosts.map(h => h.replace(/\./g, '\\.')).join('|');
+  // Escape ALL regex metacharacters, join with |
+  const escaped = hosts.map(h => escapeRegexChars(h)).join('|');
   return new RegExp(`^https?://(${escaped})(:\\d+)?$`);
 }
 
@@ -129,13 +152,14 @@ export function startServer(port: number) {
       const url = new URL(req.url);
       const ip = this.requestIP?.(req)?.address ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 
-      // CORS headers
+      // CORS + security headers
       const origin = req.headers.get('Origin') || '';
       const allowedOrigin = allowedHostRe.test(origin) ? origin : '';
       const corsHeaders: Record<string, string> = {
         'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
+        ...SECURITY_HEADERS,
       };
 
       if (req.method === 'OPTIONS') {
@@ -155,7 +179,7 @@ export function startServer(port: number) {
         // Check for invite code submission (GET /?code=XXX)
         const submittedCode = parseInviteCode(url);
         if (submittedCode) {
-          if (inviteCodes.includes(submittedCode)) {
+          if (hasValidInviteCode(submittedCode, inviteCodes)) {
             const isSecure = url.protocol === 'https:';
             return new Response(null, {
               status: 302,
@@ -317,6 +341,23 @@ async function handleUpload(req: Request, corsHeaders: Record<string, string>): 
 // ── Chat handler ────────────────────────────────────────────────────────────
 
 async function handleChat(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  const jsonHeaders = { 'Content-Type': 'application/json', ...corsHeaders };
+
+  // CSRF defense: require JSON Content-Type (blocks <form> submissions)
+  const ct = req.headers.get('Content-Type') || '';
+  if (!ct.includes('application/json')) {
+    return new Response(JSON.stringify({ error: 'Content-Type must be application/json' }), {
+      status: 415, headers: jsonHeaders,
+    });
+  }
+
+  // Limit concurrent SSE streams
+  if (activeControllers.size >= MAX_CONCURRENT_STREAMS) {
+    return new Response(JSON.stringify({ error: 'Too many concurrent requests' }), {
+      status: 503, headers: jsonHeaders,
+    });
+  }
+
   // Enforce request size limit
   const contentLength = parseInt(req.headers.get('Content-Length') || '0', 10);
   if (contentLength > MAX_BODY_BYTES) {
@@ -389,8 +430,10 @@ async function handleChat(req: Request, corsHeaders: Record<string, string>): Pr
         if (controller.signal.aborted) {
           sendEvent({ type: 'done', answer: 'Query cancelled.', toolCalls: [], iterations: 0, totalTime: 0 });
         } else {
-          const message = error instanceof Error ? error.message : String(error);
-          sendEvent({ type: 'done', answer: `Error: ${message}`, toolCalls: [], iterations: 0, totalTime: 0 });
+          // Log full error internally but send generic message to client
+          const internal = error instanceof Error ? error.message : String(error);
+          console.error(`[chat] Error for session ${sessionId}: ${internal}`);
+          sendEvent({ type: 'done', answer: 'An error occurred while processing your query. Please try again.', toolCalls: [], iterations: 0, totalTime: 0 });
         }
       } finally {
         activeControllers.delete(sessionId);

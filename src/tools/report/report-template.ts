@@ -22,11 +22,12 @@ export interface ReportParams {
  * Eliminates CDN dependency on marked.js inside Playwright.
  */
 function markdownToHtml(md: string): string {
-  let html = md;
+  // First escape all HTML in the input to prevent injection
+  let html = escapeHtml(md);
 
-  // Code blocks (``` ... ```)
+  // Code blocks (``` ... ```) — already escaped, just wrap
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, code) =>
-    `<pre><code>${escapeHtml(code.trim())}</code></pre>`
+    `<pre><code>${code.trim()}</code></pre>`
   );
 
   // Inline code
@@ -52,15 +53,19 @@ function markdownToHtml(md: string): string {
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
 
   // Blockquotes
-  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
 
-  // Bold and italic
+  // Bold and italic (using escaped ** and *)
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
 
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  // Links — already escaped, reconstruct safely
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text: string, href: string) => {
+    // Only allow http/https links
+    if (!/^https?:\/\//.test(href)) return `${text} (${href})`;
+    return `<a href="${href}">${text}</a>`;
+  });
 
   // Unordered lists
   html = html.replace(/(?:^|\n)((?:- .+\n?)+)/g, (_m, block: string) => {

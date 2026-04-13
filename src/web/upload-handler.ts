@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 
 const MAX_TEXT_LENGTH = 100_000;
 const MAX_TABLE_ROWS = 500;
+const PDF_TIMEOUT_MS = 30_000; // 30 second timeout for PDF parsing
 
 const SUPPORTED_TYPES: Record<string, string> = {
   'application/pdf': 'pdf',
@@ -54,7 +55,12 @@ function toMarkdownTable(rows: string[][]): string {
 async function parsePdf(buffer: Buffer): Promise<string> {
   const parser = new PDFParse({ data: new Uint8Array(buffer), verbosity: 0 });
   try {
-    const result = await parser.getText();
+    const result = await Promise.race([
+      parser.getText(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('PDF parsing timed out')), PDF_TIMEOUT_MS)
+      ),
+    ]);
     return result.text;
   } finally {
     await parser.destroy().catch(() => {});
@@ -69,7 +75,7 @@ function parseCsv(buffer: Buffer): string {
 }
 
 function parseXlsx(buffer: Buffer): string {
-  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const workbook = XLSX.read(buffer, { type: 'buffer', sheetRows: MAX_TABLE_ROWS + 1 });
   const sections: string[] = [];
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];

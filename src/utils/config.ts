@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs';
 import { dirname } from 'path';
+import { randomBytes } from 'crypto';
 
 const SETTINGS_FILE = '.petyr/settings.json';
 
@@ -24,7 +25,12 @@ export function loadConfig(): Config {
 
   try {
     const content = readFileSync(SETTINGS_FILE, 'utf-8');
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    // Guard against non-object JSON (e.g. string, number, array)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed;
   } catch {
     return {};
   }
@@ -36,7 +42,10 @@ export function saveConfig(config: Config): boolean {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(SETTINGS_FILE, JSON.stringify(config, null, 2));
+    // Atomic write: write to temp file then rename
+    const tmpPath = SETTINGS_FILE + '.' + randomBytes(4).toString('hex') + '.tmp';
+    writeFileSync(tmpPath, JSON.stringify(config, null, 2));
+    renameSync(tmpPath, SETTINGS_FILE);
     return true;
   } catch {
     return false;

@@ -47,6 +47,15 @@ export function checkApiKeyExists(apiKeyName: string): boolean {
 }
 
 export function saveApiKeyToEnv(apiKeyName: string, apiKeyValue: string): boolean {
+  // Validate key name: only alphanumeric and underscores
+  if (!/^[A-Z][A-Z0-9_]*$/.test(apiKeyName)) {
+    return false;
+  }
+  // Validate key value: no newlines or control characters (prevents .env injection)
+  if (/[\r\n\x00-\x1f]/.test(apiKeyValue)) {
+    return false;
+  }
+
   try {
     let lines: string[] = [];
     let keyUpdated = false;

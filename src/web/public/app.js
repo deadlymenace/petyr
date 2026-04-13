@@ -117,8 +117,8 @@ let isStreaming = false;
 let activeAbortController = null;
 let pendingFiles = []; // Files selected but not yet uploaded
 
-// Unique session ID per browser tab — prevents shared state between users/tabs
-const SESSION_ID = 'web-' + Math.random().toString(36).slice(2, 11);
+// Unique session ID per browser tab — cryptographically random
+const SESSION_ID = 'web-' + crypto.randomUUID();
 
 // Configure marked for rendering
 marked.setOptions({
@@ -145,40 +145,21 @@ function sanitizeUrl(url) {
 }
 
 function sanitizeHtml(html) {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-
-  template.content
-    .querySelectorAll('script, style, iframe, object, embed, link, meta')
-    .forEach(el => el.remove());
-
-  template.content.querySelectorAll('*').forEach(el => {
-    Array.from(el.attributes).forEach(attr => {
-      const name = attr.name.toLowerCase();
-      if (name.startsWith('on') || name === 'style' || name === 'srcdoc') {
-        el.removeAttribute(attr.name);
-        return;
-      }
-
-      if (name === 'href' || name === 'src' || name === 'xlink:href') {
-        const safeUrl = sanitizeUrl(attr.value);
-        if (!safeUrl) {
-          el.removeAttribute(attr.name);
-          return;
-        }
-        el.setAttribute(attr.name, safeUrl);
-      }
-    });
-
-    if (el.tagName === 'A') {
-      el.setAttribute('rel', 'noopener noreferrer');
-      if (!el.getAttribute('href')) {
-        el.removeAttribute('target');
-      }
-    }
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+      'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'a', 'strong', 'em', 'del', 'img', 'div', 'span',
+      'sup', 'sub', 'canvas',
+    ],
+    ALLOWED_ATTR: [
+      'href', 'src', 'alt', 'title', 'class', 'id',
+      'target', 'rel', 'width', 'height',
+    ],
+    ALLOW_DATA_ATTR: false,
+    ADD_ATTR: ['rel'],
   });
-
-  return template.innerHTML;
 }
 
 // =============================================================================
@@ -433,7 +414,7 @@ async function sendMessage() {
     if (error.name === 'AbortError') {
       contentEl.innerHTML = renderMarkdown('*Query cancelled.*');
     } else {
-      contentEl.innerHTML = renderMarkdown(`**Error:** ${error.message}`);
+      contentEl.innerHTML = renderMarkdown(`**Error:** Something went wrong. Please try again.`);
     }
     clearAttachments();
   }
@@ -471,6 +452,13 @@ function handleEvent(event, toolsEl, contentEl, statsEl, toolEvents) {
 
     case 'answer_start':
       clearThinking(contentEl);
+      break;
+
+    case 'tool_limit':
+    case 'tool_approval':
+    case 'tool_denied':
+    case 'context_cleared':
+      // Acknowledged but not displayed in UI
       break;
 
     case 'done':

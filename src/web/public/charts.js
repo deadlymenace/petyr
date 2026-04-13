@@ -92,8 +92,10 @@ function renderChartBlock(jsonString, container) {
     new Chart(canvas, config);
   } catch (e) {
     container.classList.add('chart-error');
-    container.innerHTML = '<pre style="color:#ef4444;font-size:12px;margin:0;">Chart error: ' +
-      e.message + '\n\n' + jsonString.slice(0, 500) + '</pre>';
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'color:#ef4444;font-size:12px;margin:0;';
+    pre.textContent = 'Chart error: ' + e.message + '\n\n' + jsonString.slice(0, 500);
+    container.replaceChildren(pre);
   }
 }
 
@@ -103,6 +105,9 @@ function renderChartBlock(jsonString, container) {
  */
 function renderSparkline(data, container) {
   if (!data || !data.length || !container) return;
+
+  // Validate all data values are finite numbers
+  if (!data.every(v => typeof v === 'number' && Number.isFinite(v))) return;
 
   const w = 64, h = 18, pad = 1;
   const min = Math.min(...data);
@@ -115,7 +120,19 @@ function renderSparkline(data, container) {
 
   const color = data[data.length - 1] >= data[0] ? '#22c55e' : '#ef4444';
 
-  container.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="vertical-align:middle">
-    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', String(w));
+  svg.setAttribute('height', String(h));
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.style.verticalAlign = 'middle';
+  const polyline = document.createElementNS(NS, 'polyline');
+  polyline.setAttribute('points', points);
+  polyline.setAttribute('fill', 'none');
+  polyline.setAttribute('stroke', color);
+  polyline.setAttribute('stroke-width', '1.5');
+  polyline.setAttribute('stroke-linecap', 'round');
+  polyline.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(polyline);
+  container.replaceChildren(svg);
 }

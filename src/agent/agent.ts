@@ -69,10 +69,10 @@ export class Agent {
     // Load relevant conversation history (Q&A from prior turns)
     ctx.conversationHistory = await this.loadConversationHistory(query, inMemoryHistory);
 
-    // Build initial prompt with conversation history context
+    // Build initial prompt with conversation history context, using delimiters
     let currentPrompt = ctx.conversationHistory
-      ? `${query}\n\n${ctx.conversationHistory}`
-      : query;
+      ? `<user_query>\n${query}\n</user_query>\n\n<conversation_history>\n${ctx.conversationHistory}\n</conversation_history>`
+      : `<user_query>\n${query}\n</user_query>`;
 
     // Main agent loop
     while (ctx.iteration < this.maxIterations) {

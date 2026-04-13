@@ -1,6 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { constants } from 'node:fs';
 import { access, readFile, writeFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { z } from 'zod';
 import { formatToolResult } from '../types.js';
 import { assertSandboxPath } from './sandbox.js';
@@ -13,6 +14,31 @@ import {
   restoreLineEndings,
   stripBom,
 } from './utils/edit-diff.js';
+
+const BLOCKED_EDIT_DIRS = new Set(['.aws', '.git', '.gnupg', '.ssh', '.petyr']);
+const BLOCKED_EDIT_FILENAMES = new Set([
+  '.bash_history', '.bash_profile', '.bashrc', '.zshrc', '.profile',
+  '.git-credentials', '.netrc', '.npmrc', '.pypirc',
+  'creds.json', 'creds.json.bak', 'gateway.json', 'sessions.json', 'whatsapp.json',
+  'id_ed25519', 'id_rsa',
+]);
+const BLOCKED_EDIT_EXTENSIONS = ['.key', '.p12', '.pem', '.pfx'];
+
+function assertEditPathAllowed(path: string, relativePath: string): void {
+  const normalizedRelative = relativePath.replace(/\\/g, '/');
+  const segments = normalizedRelative.split('/').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const name = basename(normalizedRelative || path).toLowerCase();
+
+  if (segments.some(segment => BLOCKED_EDIT_DIRS.has(segment))) {
+    throw new Error(`Editing sensitive paths is not allowed: ${path}`);
+  }
+  if (name === '.env' || (name.startsWith('.env.') && name !== '.env.example')) {
+    throw new Error(`Editing sensitive paths is not allowed: ${path}`);
+  }
+  if (BLOCKED_EDIT_FILENAMES.has(name) || BLOCKED_EDIT_EXTENSIONS.some(ext => name.endsWith(ext))) {
+    throw new Error(`Editing sensitive paths is not allowed: ${path}`);
+  }
+}
 
 const editFileSchema = z.object({
   path: z.string().describe('Path to the file to edit (relative or absolute).'),
@@ -27,11 +53,12 @@ export const editFileTool = new DynamicStructuredTool({
   schema: editFileSchema,
   func: async (input) => {
     const cwd = process.cwd();
-    const { resolved } = await assertSandboxPath({
+    const { resolved, relative: relPath } = await assertSandboxPath({
       filePath: input.path,
       cwd,
       root: cwd,
     });
+    assertEditPathAllowed(input.path, relPath);
 
     try {
       await access(resolved, constants.R_OK | constants.W_OK);

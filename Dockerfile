@@ -8,8 +8,13 @@ RUN bun install --frozen-lockfile
 # Install Playwright Chromium (needed for PDF rendering)
 RUN bunx playwright install --with-deps chromium
 
-# Copy application source
+# Copy application source (see .dockerignore for exclusions)
 COPY . .
+
+# Create non-root user for runtime security
+RUN adduser --disabled-password --gecos "" --home /home/petyr petyr && \
+    chown -R petyr:petyr /app
+USER petyr
 
 # Runtime configuration
 ENV PETYR_WEB_PORT=3000
