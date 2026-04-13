@@ -12,7 +12,7 @@ RUN bunx playwright install --with-deps chromium
 COPY . .
 
 # Create non-root user for runtime security
-RUN adduser --disabled-password --gecos "" --home /home/petyr petyr && \
+RUN useradd --no-log-init --create-home --shell /bin/sh petyr && \
     chown -R petyr:petyr /app
 USER petyr
 
