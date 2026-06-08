@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
-import { randomInt } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import { isSelfChatMode, normalizeE164 } from './utils.js';
 
 const PAIRING_REPLY_HISTORY_GRACE_MS = 30_000;
@@ -37,9 +37,11 @@ function savePairingStore(store: PairingStore): void {
   const path = pairingPath();
   const dir = dirname(path);
   if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
-  writeFileSync(path, JSON.stringify(store, null, 2), 'utf8');
+  const tempPath = `${path}.${randomUUID()}.tmp`;
+  writeFileSync(tempPath, JSON.stringify(store), { encoding: 'utf8', mode: 0o600 });
+  renameSync(tempPath, path);
 }
 
 export function createPairingCode(): string {
@@ -250,4 +252,3 @@ export async function checkInboundAccessControl(params: {
     resolvedAccountId: params.accountId,
   };
 }
-

@@ -7,9 +7,9 @@
  *
  * Cache files live in .petyr/cache/ (already gitignored via .petyr/*).
  */
-import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync, renameSync } from 'fs';
 import { join, dirname } from 'path';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { logger } from './logger.js';
 
 // ============================================================================
@@ -74,7 +74,8 @@ export function buildCacheKey(
     .join('&');
 
   const raw = `${endpoint}?${sortedParams}`;
-  const hash = createHash('md5').update(raw).digest('hex').slice(0, 12);
+  // Use SHA-256 to reduce collision risk while keeping short filenames.
+  const hash = createHash('sha256').update(raw).digest('hex').slice(0, 16);
 
   // Turn "/prices/" → "prices"
   const cleanEndpoint = endpoint
@@ -184,9 +185,11 @@ export function writeCache(
   try {
     const dir = dirname(filepath);
     if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
     }
-    writeFileSync(filepath, JSON.stringify(entry, null, 2));
+    const tempPath = `${filepath}.${randomUUID()}.tmp`;
+    writeFileSync(tempPath, JSON.stringify(entry), { mode: 0o600 });
+    renameSync(tempPath, filepath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.warn(`Cache write error: ${label} — ${message}`, { filepath });
