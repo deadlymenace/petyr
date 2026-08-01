@@ -2,7 +2,7 @@ import { DynamicStructuredTool, StructuredToolInterface } from '@langchain/core/
 import { AIMessage } from '@langchain/core/messages';
 import type { RunnableConfig } from '@langchain/core/runnables';
 import { z } from 'zod';
-import { callLlm } from '../../model/llm.js';
+import { callLlm, llmResponseText } from '../../model/llm.js';
 import { formatToolResult } from '../types.js';
 import { callApi } from '../finance/api.js';
 
@@ -58,9 +58,7 @@ Respond with JSON only.`;
 
       let params: { tickers: string[]; metric: string; sort_order: string; metric_display_name: string };
       try {
-        const text = typeof extractResponse.content === 'string'
-          ? extractResponse.content
-          : JSON.stringify(extractResponse.content);
+        const text = llmResponseText(extractResponse);
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         params = jsonMatch ? JSON.parse(jsonMatch[0]) : { tickers: [], metric: 'pe_ratio', sort_order: 'asc', metric_display_name: 'P/E Ratio' };
       } catch {

@@ -2,7 +2,8 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { callLlm } from '../../model/llm.js';
+import { callLlm, llmResponseText } from '../../model/llm.js';
+import type { Scratchpad } from '../../agent/scratchpad.js';
 import { formatToolResult } from '../types.js';
 import { renderReportToPdf } from './pdf-renderer.js';
 
@@ -37,7 +38,7 @@ export function createGenerateReport(model: string): DynamicStructuredTool {
     description: `Generates a structured research report from the current analysis session. Compiles all tool results and findings into a professional report saved to disk. Supports markdown, text, and PDF formats. PDF reports include a branded cover page and embedded charts. Use after completing a research workflow to produce a deliverable.`,
     schema: GenerateReportInputSchema,
     func: async (input, _runManager, config) => {
-      const scratchpad = config?.metadata?.scratchpad;
+      const scratchpad = config?.metadata?.scratchpad as Scratchpad | undefined;
       let contextData = '';
 
       if (scratchpad && typeof scratchpad.getFullContexts === 'function') {
@@ -87,11 +88,7 @@ ${input.format === 'text' ? 'Use plain text formatting.' : 'Use markdown formatt
       });
 
       // callLlm returns string directly when no tools/outputSchema are provided
-      const reportText = typeof response === 'string'
-        ? response
-        : typeof response.content === 'string'
-          ? response.content
-          : JSON.stringify(response.content);
+      const reportText = llmResponseText(response);
 
       // Generate filename
       const now = new Date();

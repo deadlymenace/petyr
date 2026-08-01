@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import Exa from 'exa-js';
 import { z } from 'zod';
-import { callLlm } from '../../model/llm.js';
+import { callLlm, llmResponseText } from '../../model/llm.js';
 import { formatToolResult } from '../types.js';
 import { logger } from '@/utils';
 
@@ -94,9 +94,7 @@ Include 5-10 of the most impactful recent headlines.`;
   });
 
   try {
-    const text = typeof response.content === 'string'
-      ? response.content
-      : JSON.stringify(response.content);
+    const text = llmResponseText(response);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : { error: 'Could not parse news sentiment', headlines: [] };
   } catch {
@@ -210,9 +208,7 @@ Respond with plain text only, no JSON.`;
     systemPrompt: 'You are a financial sentiment analyst. Write clear, actionable summaries combining institutional and retail sentiment signals.',
   });
 
-  return typeof response.content === 'string'
-    ? response.content
-    : JSON.stringify(response.content);
+  return llmResponseText(response);
 }
 
 function extractAuthor(url: string): string {

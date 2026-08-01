@@ -146,6 +146,17 @@ export interface LlmResult {
   usage?: TokenUsage;
 }
 
+/**
+ * Extract plain text from a callLlm response.
+ * Without tools/outputSchema, callLlm returns the message content directly
+ * (usually a string); with tools it returns the full AIMessage.
+ */
+export function llmResponseText(response: AIMessage | string): string {
+  if (typeof response === 'string') return response;
+  const content = response.content;
+  return typeof content === 'string' ? content : JSON.stringify(content ?? response);
+}
+
 function extractUsage(result: unknown): TokenUsage | undefined {
   if (!result || typeof result !== 'object') return undefined;
   const msg = result as Record<string, unknown>;

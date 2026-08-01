@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import Exa from 'exa-js';
 import { z } from 'zod';
-import { callLlm } from '../../model/llm.js';
+import { callLlm, llmResponseText } from '../../model/llm.js';
 import { formatToolResult } from '../types.js';
 import { logger } from '@/utils';
 
@@ -56,7 +56,7 @@ export function createXResearch(model: string): DynamicStructuredTool {
 
       // Resolve platform filter to domains
       const domains = input.platforms?.length
-        ? input.platforms.flatMap(p => PLATFORM_DOMAINS[p] ?? [])
+        ? input.platforms.flatMap((p: string) => PLATFORM_DOMAINS[p] ?? [])
         : ALL_DOMAINS;
 
       try {
@@ -124,9 +124,7 @@ Respond with a JSON object:
 
         let analysis: Record<string, unknown>;
         try {
-          const text = typeof response.content === 'string'
-            ? response.content
-            : JSON.stringify(response.content);
+          const text = llmResponseText(response);
           const jsonMatch = text.match(/\{[\s\S]*\}/);
           analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
         } catch {
