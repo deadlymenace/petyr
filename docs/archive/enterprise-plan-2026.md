@@ -1,3 +1,6 @@
+> **ARCHIVED — Superseded by [`docs/product-plan.md`](../product-plan.md) (August 2026).**
+> Petyr pivoted from enterprise SaaS to a retail AI investing companion. This document is retained for reference only; none of its Phase 1 was built.
+
 # Petyr Enterprise Platform — Product & Business Plan
 
 ## Vision

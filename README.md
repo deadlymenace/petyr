@@ -1,6 +1,8 @@
 # Petyr
 
-Petyr is an autonomous financial research agent that thinks, plans, and learns as it works. It performs deep analysis using task planning, self-reflection, real-time market data, macroeconomic intelligence, and 20 built-in financial analysis skills.
+**Know before you invest.** Petyr is an AI investing companion that brings institutional-grade research to everyday investors — it reads the filings, models the valuations, and explains the risk in plain English. Under the hood it is an autonomous financial research agent with real-time market data, macroeconomic intelligence, 19 tools, and 23 built-in analysis skills.
+
+> 📋 Product direction: see the [Product & Technical Plan](docs/product-plan.md) — Petyr is pivoting to a retail investing companion app (mobile + web) with autonomous portfolio research. The enterprise plan is [archived](docs/archive/enterprise-plan-2026.md).
 
 ## Table of Contents
 
@@ -29,25 +31,33 @@ Petyr takes complex financial questions and turns them into clear, step-by-step 
 - **Macro & Economic Intelligence**: Interest rates, inflation, GDP, yield curves, unemployment, and volatility via the FRED API
 - **Supply Chain & Industry Analysis**: SEC EDGAR full-text search for supplier/customer/competitor mapping across all public filings
 - **Catalyst Tracking**: Management changes (8-K Item 5.02), insider trading patterns, activist investor filings (13D/13G)
-- **20 Built-in Analysis Skills**: From DCF valuation to Altman Z-Score to competitive moat analysis
+- **23 Built-in Analysis Skills**: From DCF valuation to Altman Z-Score to competitive moat analysis
 - **Safety Features**: Built-in loop detection and step limits to prevent runaway execution
 
 
 ## Tools
 
-Petyr has 7 core tools that the agent selects from autonomously:
+Petyr registers 19 tools that the agent selects from autonomously:
 
 | Tool | Description | Data Source |
 |------|-------------|-------------|
-| `financial_search` | Stock prices, fundamentals, filings, insider trades, key ratios, segmented revenues | [Financial Datasets API](https://financialdatasets.ai) |
+| `financial_search` | Stock prices, fundamentals, filings, insider trades, key ratios, segmented revenues, crypto | [Financial Datasets API](https://financialdatasets.ai) |
 | `financial_metrics` | Direct metric lookups (revenue, market cap, EPS, etc.) | Financial Datasets API |
 | `read_filings` | SEC filing reader for 10-K, 10-Q, 8-K documents | Financial Datasets API |
-| `macro_search` | Economic indicators — fed funds rate, 10Y yield, CPI, GDP, unemployment, VIX, yield curve | [FRED API](https://fred.stlouisfed.org) |
+| `stock_screener` | Screen and rank tickers by financial criteria | Financial Datasets API |
+| `macro_search` | Economic indicators — fed funds rate, 10Y yield, CPI, GDP, unemployment, VIX, yield curve | [FRED API](https://fred.stlouisfed.org) (requires `FRED_API_KEY`) |
 | `supply_chain_search` | Industry analysis — supplier/customer discovery, competitive positioning, revenue concentration | [SEC EDGAR EFTS](https://efts.sec.gov) (free) |
 | `catalyst_search` | Event-driven signals — management changes, insider trading patterns, activist investors, proxy fights | SEC EDGAR + Financial Datasets API |
-| `web_search` | General web search for news, analysis, and context | [Exa](https://exa.ai) / [Tavily](https://tavily.com) |
-
-Additional utilities: `web_fetch` (lightweight page reader), `browser` (Playwright-based scraping), `skill` (invokes analysis workflows), `read_file` / `write_file` / `edit_file` (workspace management).
+| `web_search` | General web search for news, analysis, and context | [Exa](https://exa.ai) / [Perplexity](https://perplexity.ai) / [Tavily](https://tavily.com) |
+| `x_research` | Multi-platform social research — X/Twitter, Reddit, StockTwits, HackerNews, YouTube, Substack | Exa |
+| `get_news_sentiment` | News + social sentiment, LLM-scored bullish/bearish with summary | Exa |
+| `web_fetch` | Lightweight page reader (Readability, SSRF-guarded) | — |
+| `browser` | Playwright-based scraping for JS-heavy pages | — |
+| `generate_report` | Branded markdown/PDF research reports with charts | Local |
+| `manage_watchlist` | Add/remove/list tickers with live price snapshots | Local + Financial Datasets API |
+| `get_options_data` | Options context (LLM knowledge — no live chain data) | — |
+| `read_file` / `write_file` / `edit_file` | Sandboxed workspace management (write/edit require approval) | Local |
+| `skill` | Invokes one of the 23 analysis skill workflows | — |
 
 
 ## Skills
@@ -99,11 +109,19 @@ Skills are structured analysis workflows that Petyr follows step-by-step. Each s
 | **Competitive Analysis** | Moat assessment, market share trends, Porter's Five Forces, peer benchmarking |
 | **Regulatory Scan** | Regulatory risk scanning — pending legislation, agency actions, compliance exposure |
 
+### Earnings & Street Intelligence
+
+| Skill | Description |
+|-------|-------------|
+| **Earnings Analysis** | Earnings call / transcript / guidance deep dive |
+| **Earnings Surprise** | Beat-miss history and estimate revision momentum |
+| **Analyst Ratings** | Consensus, price targets, upgrades/downgrades |
+
 
 ## Prerequisites
 
 - [Bun](https://bun.com) runtime (v1.0 or higher)
-- OpenAI API key (get [here](https://platform.openai.com/api-keys))
+- Anthropic API key (get [here](https://console.anthropic.com)) — default model is `claude-sonnet-4-5`; OpenAI, Google, xAI, DeepSeek, Moonshot, OpenRouter, and Ollama are also supported
 - Financial Datasets API key (get [here](https://financialdatasets.ai))
 - Exa API key (get [here](https://exa.ai)) - optional, for web search
 - FRED API key (get [here](https://fred.stlouisfed.org/docs/api/api_key.html)) - optional, for macro data
@@ -177,6 +195,12 @@ Or with watch mode for development:
 ```bash
 bun dev
 ```
+
+Run the web server (public landing page + waitlist at `/`, invite-gated research preview at `/app`):
+```bash
+bun run web
+```
+Set `PETYR_INVITE_CODES` to gate the research preview, `PETYR_DATA_DIR` for persistent waitlist storage in production, and `PETYR_ADMIN_TOKEN` to enable `GET /api/waitlist/export` (see `env.example`).
 
 ### Example Queries
 

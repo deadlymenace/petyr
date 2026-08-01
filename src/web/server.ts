@@ -1,5 +1,6 @@
 import { join, resolve, relative } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'fs';
+import { timingSafeEqual } from 'crypto';
 import { runAgentForMessage } from '../gateway/agent-runner.js';
 import { getSetting } from '../utils/config.js';
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from '../model/llm.js';
@@ -100,6 +101,57 @@ const allowedHostRe = buildAllowedHostPattern();
 // ---------------------------------------------------------------------------
 const inviteCodes = loadInviteCodes();
 
+// ---------------------------------------------------------------------------
+// Public paths — always reachable without an invite code.
+// The marketing landing page + its assets and the waitlist API stay open;
+// the research preview (/app) and chat APIs remain gated.
+// ---------------------------------------------------------------------------
+const PUBLIC_PATHS = new Set([
+  '/', '/index.html', '/landing.js', '/bird.svg', '/favicon.ico',
+  '/api/waitlist', '/api/waitlist/export',
+]);
+
+// ---------------------------------------------------------------------------
+// Waitlist — JSONL on disk, deduped in memory.
+// PETYR_DATA_DIR should point at persistent storage in production
+// (e.g. a Railway volume mounted at /data); falls back to .petyr/ locally.
+// ---------------------------------------------------------------------------
+const DATA_DIR = process.env.PETYR_DATA_DIR || join(process.cwd(), '.petyr');
+const WAITLIST_PATH = join(DATA_DIR, 'waitlist.jsonl');
+const MAX_WAITLIST_BODY_BYTES = 1024;
+const MAX_WAITLIST_ENTRIES = 100_000;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const waitlistEmails = new Set<string>();
+
+function loadWaitlist() {
+  try {
+    if (!existsSync(WAITLIST_PATH)) return;
+    for (const line of readFileSync(WAITLIST_PATH, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const entry = JSON.parse(line) as { email?: string };
+        if (entry.email) waitlistEmails.add(entry.email);
+      } catch {
+        // Skip malformed lines
+      }
+    }
+  } catch (err) {
+    console.error('[waitlist] Failed to load existing entries:', err);
+  }
+}
+
+/** Constant-time comparison for the admin token. */
+function safeTokenCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
+
 // ── Upload storage ──────────────────────────────────────────────────────────
 type ParsedFile = { filename: string; text: string; uploadedAt: number };
 const uploadStore = new Map<string, ParsedFile>();
@@ -145,6 +197,12 @@ export function startServer(port: number) {
     console.log(`  Invite gate active (${inviteCodes.length} code(s) configured)`);
   }
 
+  loadWaitlist();
+  console.log(`  Waitlist storage: ${WAITLIST_PATH} (${waitlistEmails.size} signup(s))`);
+  if (process.env.RAILWAY_ENVIRONMENT && !process.env.PETYR_DATA_DIR) {
+    console.warn('  WARNING: PETYR_DATA_DIR is not set — waitlist signups will be lost on redeploy. Mount a volume and set PETYR_DATA_DIR.');
+  }
+
   Bun.serve({
     port,
     idleTimeout: 255, // Max allowed — agent calls can take minutes
@@ -174,7 +232,7 @@ export function startServer(port: number) {
         });
       }
 
-      // --- Invite gate ---
+      // --- Invite gate (marketing page + waitlist stay public) ---
       if (inviteCodes.length > 0) {
         // Check for invite code submission (GET /?code=XXX)
         const submittedCode = parseInviteCode(url);
@@ -184,7 +242,7 @@ export function startServer(port: number) {
             return new Response(null, {
               status: 302,
               headers: {
-                'Location': '/',
+                'Location': '/app',
                 'Set-Cookie': buildAccessCookie(submittedCode, isSecure),
                 ...corsHeaders,
               },
@@ -197,8 +255,8 @@ export function startServer(port: number) {
           });
         }
 
-        // Check cookie on all other requests
-        if (!hasValidAccess(req, inviteCodes)) {
+        // Check cookie on all other requests (public paths skip the gate)
+        if (!PUBLIC_PATHS.has(url.pathname) && !hasValidAccess(req, inviteCodes)) {
           // API routes return 401 JSON
           if (url.pathname.startsWith('/api/')) {
             return new Response(JSON.stringify({ error: 'Unauthorized — valid invite code required' }), {
@@ -215,6 +273,14 @@ export function startServer(port: number) {
       }
 
       // API routes
+      if (url.pathname === '/api/waitlist' && req.method === 'POST') {
+        return handleWaitlist(req, corsHeaders);
+      }
+
+      if (url.pathname === '/api/waitlist/export' && req.method === 'GET') {
+        return handleWaitlistExport(req, url, corsHeaders);
+      }
+
       if (url.pathname === '/api/chat' && req.method === 'POST') {
         return handleChat(req, corsHeaders);
       }
@@ -238,6 +304,8 @@ export function startServer(port: number) {
 
       // Static file serving (with path traversal protection)
       let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
+      // Research preview (gated chat UI) lives at /app
+      if (url.pathname === '/app' || url.pathname === '/app/') filePath = '/app.html';
       const fullPath = resolve(publicDir, '.' + filePath);
 
       // Block path traversal — resolved path must stay within publicDir
@@ -260,6 +328,122 @@ export function startServer(port: number) {
   });
 
   console.log(`\n  Petyr Web UI running at http://localhost:${port}\n`);
+}
+
+// ── Waitlist handlers ───────────────────────────────────────────────────────
+
+async function handleWaitlist(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  const jsonHeaders = { 'Content-Type': 'application/json', ...corsHeaders };
+
+  // CSRF defense: require JSON Content-Type (blocks <form> submissions)
+  const ct = req.headers.get('Content-Type') || '';
+  if (!ct.includes('application/json')) {
+    return new Response(JSON.stringify({ error: 'Content-Type must be application/json' }), {
+      status: 415, headers: jsonHeaders,
+    });
+  }
+
+  let body: { email?: string; source?: string };
+  try {
+    const rawText = await req.text();
+    if (rawText.length > MAX_WAITLIST_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Request body too large' }), {
+        status: 413, headers: jsonHeaders,
+      });
+    }
+    body = JSON.parse(rawText);
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400, headers: jsonHeaders,
+    });
+  }
+
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email || email.length > 254 || !EMAIL_RE.test(email)) {
+    return new Response(JSON.stringify({ error: 'Please enter a valid email address' }), {
+      status: 400, headers: jsonHeaders,
+    });
+  }
+
+  if (waitlistEmails.has(email)) {
+    return new Response(JSON.stringify({ ok: true, already: true }), { headers: jsonHeaders });
+  }
+
+  if (waitlistEmails.size >= MAX_WAITLIST_ENTRIES) {
+    return new Response(JSON.stringify({ error: 'Waitlist is full' }), {
+      status: 503, headers: jsonHeaders,
+    });
+  }
+
+  const source = typeof body.source === 'string' ? body.source.slice(0, 32) : 'unknown';
+  const entry = {
+    email,
+    ts: new Date().toISOString(),
+    source,
+    ua: (req.headers.get('User-Agent') || '').slice(0, 200),
+  };
+
+  try {
+    mkdirSync(DATA_DIR, { recursive: true });
+    appendFileSync(WAITLIST_PATH, JSON.stringify(entry) + '\n', 'utf8');
+    waitlistEmails.add(email);
+  } catch (err) {
+    console.error('[waitlist] Failed to persist signup:', err);
+    return new Response(JSON.stringify({ error: 'Could not save your signup — please try again' }), {
+      status: 500, headers: jsonHeaders,
+    });
+  }
+
+  return new Response(JSON.stringify({ ok: true }), { headers: jsonHeaders });
+}
+
+function handleWaitlistExport(req: Request, url: URL, corsHeaders: Record<string, string>): Response {
+  const adminToken = process.env.PETYR_ADMIN_TOKEN || '';
+  if (!adminToken) {
+    return new Response('Not found', { status: 404, headers: corsHeaders });
+  }
+
+  const auth = req.headers.get('Authorization') || '';
+  const provided = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!provided || !safeTokenCompare(provided, adminToken)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
+
+  const raw = existsSync(WAITLIST_PATH) ? readFileSync(WAITLIST_PATH, 'utf8') : '';
+
+  if (url.searchParams.get('format') === 'jsonl') {
+    return new Response(raw, {
+      headers: {
+        'Content-Type': 'application/jsonl; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="waitlist.jsonl"',
+        ...corsHeaders,
+      },
+    });
+  }
+
+  // Default: CSV
+  const rows = ['email,ts,source'];
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line) as { email?: string; ts?: string; source?: string };
+      const csv = [e.email || '', e.ts || '', e.source || '']
+        .map(v => `"${String(v).replace(/"/g, '""')}"`)
+        .join(',');
+      rows.push(csv);
+    } catch {
+      // Skip malformed lines
+    }
+  }
+  return new Response(rows.join('\n') + '\n', {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="waitlist.csv"',
+      ...corsHeaders,
+    },
+  });
 }
 
 // ── Upload handler ──────────────────────────────────────────────────────────

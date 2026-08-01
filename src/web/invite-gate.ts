@@ -63,13 +63,13 @@ export function renderInviteForm(error?: string): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Petyr — Access Required</title>
+<title>Petyr — Research Preview</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Inter', -apple-system, sans-serif;
-    background: #0a0a0a;
-    color: #e8e8e8;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: #07080B;
+    color: #F4F4F0;
     height: 100vh;
     display: flex;
     align-items: center;
@@ -81,20 +81,23 @@ export function renderInviteForm(error?: string): string {
     padding: 40px;
   }
   .gate-logo {
-    font-family: 'Outfit', sans-serif;
     font-size: 28px;
-    font-weight: 700;
-    color: #258bff;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #F3D08A, #E6B860);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     margin-bottom: 8px;
   }
   .gate-subtitle {
     font-size: 13px;
-    color: #888;
+    color: #9AA1AD;
     margin-bottom: 32px;
   }
   .gate-label {
     font-size: 14px;
-    color: #ccc;
+    color: #9AA1AD;
     margin-bottom: 12px;
     display: block;
   }
@@ -105,43 +108,52 @@ export function renderInviteForm(error?: string): string {
     font-family: monospace;
     letter-spacing: 4px;
     text-align: center;
-    background: #161616;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    color: #e8e8e8;
+    background: #0E1118;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #F4F4F0;
     outline: none;
     margin-bottom: 16px;
   }
-  .gate-input:focus { border-color: #258bff; }
+  .gate-input:focus { border-color: #E6B860; }
   .gate-btn {
     width: 100%;
     padding: 12px;
     font-size: 14px;
-    font-weight: 600;
-    background: #258bff;
-    color: #fff;
+    font-weight: 700;
+    background: linear-gradient(120deg, #F3D08A, #E6B860);
+    color: #1A1404;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
   }
-  .gate-btn:hover { filter: brightness(1.15); }
+  .gate-btn:hover { filter: brightness(1.06); }
   .gate-error {
-    color: #ef4444;
+    color: #FF6B6B;
     font-size: 13px;
     margin-top: 12px;
   }
+  .gate-back {
+    display: inline-block;
+    margin-top: 24px;
+    font-size: 13px;
+    color: #646B78;
+    text-decoration: none;
+  }
+  .gate-back:hover { color: #9AA1AD; }
 </style>
 </head>
 <body>
 <div class="gate">
   <div class="gate-logo">Petyr</div>
-  <div class="gate-subtitle">AI Financial Research Agent</div>
+  <div class="gate-subtitle">Research preview — invite only</div>
   <form method="GET" action="/">
     <label class="gate-label">Enter your invite code</label>
     <input class="gate-input" type="text" name="code" placeholder="XXXXXX" autocomplete="off" autofocus required maxlength="32">
     <button class="gate-btn" type="submit">Access Petyr</button>
   </form>
   ${error ? `<div class="gate-error">${error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</div>` : ''}
+  <a class="gate-back" href="/">← Back to petyr.ai</a>
 </div>
 </body>
 </html>`;
