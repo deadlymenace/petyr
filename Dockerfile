@@ -17,6 +17,9 @@ RUN useradd --no-log-init --create-home --shell /bin/sh petyr && \
 USER petyr
 
 # Runtime configuration
+# NODE_ENV=production disables Bun's dev error overlay, which would leak
+# stack traces and source snippets to clients on unhandled errors.
+ENV NODE_ENV=production
 ENV PETYR_WEB_PORT=3000
 EXPOSE 3000
 

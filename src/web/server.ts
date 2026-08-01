@@ -8,12 +8,14 @@ import { parseUploadedFile } from './upload-handler.js';
 import type { AgentEvent } from '../agent/types.js';
 import {
   loadInviteCodes,
-  hasValidAccess,
+  getAccessCookieValue,
   hasValidInviteCode,
   parseInviteCode,
   buildAccessCookie,
   renderInviteForm,
+  renderClaimForm,
 } from './invite-gate.js';
+import { InviteStore } from './invite-store.js';
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -46,6 +48,20 @@ const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAP_CAP = 10_000;
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+// Behind a trusted edge proxy (e.g. Railway) the socket peer is the proxy,
+// which would collapse every client into ONE rate-limit bucket. When
+// PETYR_TRUST_PROXY=1, key on the LAST X-Forwarded-For hop — appended by
+// our own edge, so it can't be spoofed by client-supplied headers.
+const TRUST_PROXY = process.env.PETYR_TRUST_PROXY === '1';
+
+function clientIpFor(socketIp: string, req: Request): string {
+  if (!TRUST_PROXY) return socketIp;
+  const xff = req.headers.get('x-forwarded-for');
+  if (!xff) return socketIp;
+  const hops = xff.split(',').map(h => h.trim()).filter(Boolean);
+  return hops[hops.length - 1] || socketIp;
+}
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -109,6 +125,8 @@ const inviteCodes = loadInviteCodes();
 const PUBLIC_PATHS = new Set([
   '/', '/index.html', '/landing.js', '/bird.svg', '/favicon.ico',
   '/api/waitlist', '/api/waitlist/export',
+  // Admin-token-authenticated — carry their own (stronger) auth:
+  '/api/invites', '/api/invites/generate',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -151,6 +169,32 @@ function safeTokenCompare(a: string, b: string): boolean {
   }
   return timingSafeEqual(bufA, bufB);
 }
+
+/**
+ * Admin-token auth for management endpoints. Returns null when authorized,
+ * otherwise the error Response to send (404 when no token is configured —
+ * the endpoints don't exist unless PETYR_ADMIN_TOKEN is set).
+ */
+function requireAdmin(req: Request, corsHeaders: Record<string, string>): Response | null {
+  const adminToken = process.env.PETYR_ADMIN_TOKEN || '';
+  if (!adminToken) {
+    return new Response('Not found', { status: 404, headers: corsHeaders });
+  }
+  const auth = req.headers.get('Authorization') || '';
+  const provided = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!provided || !safeTokenCompare(provided, adminToken)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// One-time invite codes — generated via admin API, redeemable once.
+// Stored in the persistent data dir alongside the waitlist.
+// ---------------------------------------------------------------------------
+const inviteStore = new InviteStore(join(DATA_DIR, 'invites.json'));
 
 // ── Upload storage ──────────────────────────────────────────────────────────
 type ParsedFile = { filename: string; text: string; uploadedAt: number };
@@ -199,16 +243,33 @@ export function startServer(port: number) {
 
   loadWaitlist();
   console.log(`  Waitlist storage: ${WAITLIST_PATH} (${waitlistEmails.size} signup(s))`);
+  const inviteList = inviteStore.list();
+  if (inviteStore.isCorrupt()) {
+    console.error('  WARNING: invite store is CORRUPT — gate is failing closed; one-time codes and grants are disabled until the store file is repaired or removed.');
+  } else if (inviteList.length > 0) {
+    console.log(`  One-time invites: ${inviteList.filter(c => !c.used_at).length} unused / ${inviteList.length} total`);
+  }
+  if (inviteCodes.length === 0 && inviteStore.hasAnyCodes()) {
+    console.log('  Invite gate active (one-time codes)');
+  }
   if (process.env.RAILWAY_ENVIRONMENT && !process.env.PETYR_DATA_DIR) {
     console.warn('  WARNING: PETYR_DATA_DIR is not set — waitlist signups will be lost on redeploy. Mount a volume and set PETYR_DATA_DIR.');
   }
 
-  Bun.serve({
+  const server = Bun.serve({
     port,
     idleTimeout: 255, // Max allowed — agent calls can take minutes
+    // Never surface stack traces or the dev error overlay to clients
+    error() {
+      return new Response(JSON.stringify({ error: 'Internal server error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...SECURITY_HEADERS },
+      });
+    },
     async fetch(req) {
       const url = new URL(req.url);
-      const ip = this.requestIP?.(req)?.address ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+      const socketIp = this.requestIP?.(req)?.address ?? 'unknown';
+      const ip = clientIpFor(socketIp, req);
 
       // CORS + security headers
       const origin = req.headers.get('Origin') || '';
@@ -233,46 +294,81 @@ export function startServer(port: number) {
       }
 
       // --- Invite gate (marketing page + waitlist stay public) ---
-      if (inviteCodes.length > 0) {
-        // Check for invite code submission (GET /?code=XXX)
+      // Active when reusable master codes (PETYR_INVITE_CODES) or any
+      // one-time codes exist. A corrupt invite store keeps the gate ACTIVE
+      // (fail closed) — see InviteStore.
+      if (inviteCodes.length > 0 || inviteStore.hasAnyCodes()) {
+        // Explicit redemption endpoint. One-time codes are consumed ONLY by
+        // this POST — never by a GET — so link-preview/prefetch bots that
+        // fetch a shared invite link can't burn the code.
+        if (url.pathname === '/invite/claim' && req.method === 'POST') {
+          return handleInviteClaim(req, url, corsHeaders);
+        }
+
+        // GET with ?code=XXX (typed links / legacy master-code links)
         const submittedCode = parseInviteCode(url);
         if (submittedCode) {
-          if (hasValidInviteCode(submittedCode, inviteCodes)) {
+          const code = submittedCode.trim();
+          // Master codes (reusable) redeem directly — nothing is consumed
+          if (hasValidInviteCode(code, inviteCodes)) {
             const isSecure = url.protocol === 'https:';
             return new Response(null, {
               status: 302,
               headers: {
                 'Location': '/app',
-                'Set-Cookie': buildAccessCookie(submittedCode, isSecure),
+                'Set-Cookie': buildAccessCookie(code, isSecure),
                 ...corsHeaders,
               },
             });
           }
-          // Invalid code — show form with error
-          return new Response(renderInviteForm('Invalid invite code.'), {
+          // One-time codes: show the claim page WITHOUT consuming the code
+          const oneTime = code.toUpperCase();
+          if (inviteStore.peek(oneTime)) {
+            return new Response(renderClaimForm(oneTime), {
+              status: 200,
+              headers: { 'Content-Type': 'text/html', ...corsHeaders },
+            });
+          }
+          // Invalid or already-used code — show form with error
+          return new Response(renderInviteForm('Invalid or already-used invite code.'), {
             status: 200,
             headers: { 'Content-Type': 'text/html', ...corsHeaders },
           });
         }
 
         // Check cookie on all other requests (public paths skip the gate)
-        if (!PUBLIC_PATHS.has(url.pathname) && !hasValidAccess(req, inviteCodes)) {
-          // API routes return 401 JSON
-          if (url.pathname.startsWith('/api/')) {
-            return new Response(JSON.stringify({ error: 'Unauthorized — valid invite code required' }), {
-              status: 401,
-              headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        if (!PUBLIC_PATHS.has(url.pathname)) {
+          const cookieValue = getAccessCookieValue(req);
+          const authorized = !!cookieValue && (
+            hasValidInviteCode(cookieValue, inviteCodes) ||
+            inviteStore.isValidGrant(cookieValue)
+          );
+          if (!authorized) {
+            // API routes return 401 JSON
+            if (url.pathname.startsWith('/api/')) {
+              return new Response(JSON.stringify({ error: 'Unauthorized — valid invite code required' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders },
+              });
+            }
+            // HTML routes show the invite form
+            return new Response(renderInviteForm(), {
+              status: 200,
+              headers: { 'Content-Type': 'text/html', ...corsHeaders },
             });
           }
-          // HTML routes show the invite form
-          return new Response(renderInviteForm(), {
-            status: 200,
-            headers: { 'Content-Type': 'text/html', ...corsHeaders },
-          });
         }
       }
 
       // API routes
+      if (url.pathname === '/api/invites/generate' && req.method === 'POST') {
+        return handleInvitesGenerate(req, url, corsHeaders);
+      }
+
+      if (url.pathname === '/api/invites' && req.method === 'GET') {
+        return handleInvitesList(req, corsHeaders);
+      }
+
       if (url.pathname === '/api/waitlist' && req.method === 'POST') {
         return handleWaitlist(req, corsHeaders);
       }
@@ -327,7 +423,97 @@ export function startServer(port: number) {
     },
   });
 
-  console.log(`\n  Petyr Web UI running at http://localhost:${port}\n`);
+  console.log(`\n  Petyr Web UI running at http://localhost:${server.port}\n`);
+  return server;
+}
+
+// ── Invite claim handler ────────────────────────────────────────────────────
+
+/**
+ * POST /invite/claim — the only path that consumes a one-time code.
+ * Accepts form posts (from the gate form and the claim page).
+ */
+async function handleInviteClaim(req: Request, url: URL, corsHeaders: Record<string, string>): Promise<Response> {
+  const htmlHeaders = { 'Content-Type': 'text/html', ...corsHeaders };
+
+  const contentLength = parseInt(req.headers.get('Content-Length') || '0', 10);
+  if (contentLength > 4096) {
+    return new Response(renderInviteForm('Invalid request.'), { status: 413, headers: htmlHeaders });
+  }
+
+  let code = '';
+  try {
+    const form = await req.formData();
+    code = String(form.get('code') || '').trim();
+  } catch {
+    // Not a parseable form body — fall through to the error form
+  }
+  if (!code || code.length > 64) {
+    return new Response(renderInviteForm('Please enter an invite code.'), { status: 200, headers: htmlHeaders });
+  }
+
+  // Master codes (reusable) first; otherwise consume a one-time code,
+  // which issues a single-user grant token.
+  const cookieValue = hasValidInviteCode(code, inviteCodes)
+    ? code
+    : inviteStore.redeem(code.toUpperCase());
+
+  if (cookieValue) {
+    const isSecure = url.protocol === 'https:';
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': '/app',
+        'Set-Cookie': buildAccessCookie(cookieValue, isSecure),
+        ...corsHeaders,
+      },
+    });
+  }
+
+  return new Response(renderInviteForm('Invalid or already-used invite code.'), {
+    status: 200, headers: htmlHeaders,
+  });
+}
+
+// ── Invite admin handlers ───────────────────────────────────────────────────
+
+function handleInvitesGenerate(req: Request, url: URL, corsHeaders: Record<string, string>): Response {
+  const denied = requireAdmin(req, corsHeaders);
+  if (denied) return denied;
+  const jsonHeaders = { 'Content-Type': 'application/json', ...corsHeaders };
+
+  const rawCount = parseInt(url.searchParams.get('count') || '1', 10);
+  const count = Math.min(Math.max(Number.isFinite(rawCount) ? rawCount : 1, 1), 50);
+  const note = (url.searchParams.get('note') || '').slice(0, 100) || undefined;
+
+  try {
+    const codes = inviteStore.generate(count, note);
+    return new Response(JSON.stringify({ ok: true, count: codes.length, codes }), {
+      headers: jsonHeaders,
+    });
+  } catch (err) {
+    console.error('[invites] Failed to generate codes:', err);
+    return new Response(JSON.stringify({ error: 'Failed to generate invite codes' }), {
+      status: 500, headers: jsonHeaders,
+    });
+  }
+}
+
+function handleInvitesList(req: Request, corsHeaders: Record<string, string>): Response {
+  const denied = requireAdmin(req, corsHeaders);
+  if (denied) return denied;
+
+  const codes = inviteStore.list();
+  const unused = codes.filter(c => !c.used_at).length;
+  return new Response(JSON.stringify({
+    total: codes.length,
+    unused,
+    used: codes.length - unused,
+    ...(inviteStore.isCorrupt() ? { corrupt: true, warning: 'Invite store file is unreadable — gate failing closed. Repair or remove it.' } : {}),
+    codes,
+  }), {
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
 }
 
 // ── Waitlist handlers ───────────────────────────────────────────────────────
@@ -398,18 +584,8 @@ async function handleWaitlist(req: Request, corsHeaders: Record<string, string>)
 }
 
 function handleWaitlistExport(req: Request, url: URL, corsHeaders: Record<string, string>): Response {
-  const adminToken = process.env.PETYR_ADMIN_TOKEN || '';
-  if (!adminToken) {
-    return new Response('Not found', { status: 404, headers: corsHeaders });
-  }
-
-  const auth = req.headers.get('Authorization') || '';
-  const provided = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!provided || !safeTokenCompare(provided, adminToken)) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
-  }
+  const denied = requireAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   const raw = existsSync(WAITLIST_PATH) ? readFileSync(WAITLIST_PATH, 'utf8') : '';
 
