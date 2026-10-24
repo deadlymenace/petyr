@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Petyr — Know before you invest</title>
+<!-- concept page: drop the robots tag when promoting to index.html -->
+<meta name="robots" content="noindex" />
+<meta name="description" content="Petyr reads the 10-K, the attestation report and the offering memo, and hands you the plain-English version before you buy." />
+<meta property="og:title" content="Petyr — Know before you invest" />
+<meta property="og:description" content="Filings and token terms, decoded into plain English. Join the waitlist." />
+<meta name="theme-color" content="#F6F6F2" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="icon" type="image/svg+xml" href="/bird.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tinos:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Concept B · Decoded
+     Layout: the page is a stack of documents Petyr has marked up. Source
+     text is set like an EDGAR filing (Tinos); Petyr's notes sit in the
+     margin; the brand gold becomes the highlighter. Deliberately light. */
+  :root{
+    --paper:#F6F6F2; --sheet:#FFFFFF; --ink:#121419; --graphite:#4A505B; --pencil:#787E89;
+    --rule:#E2E3DD; --rule2:#CDCFC8;
+    --hl:#F7D57F; --gold:#E6B860; --gold-ink:#8A600E; --redpen:#C2412F; --green-ink:#0E7A57; --azure-ink:#2B54C6;
+    --f-display:'Bricolage Grotesque','Plus Jakarta Sans',system-ui,sans-serif;
+    --f-ui:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --f-doc:'Tinos','Times New Roman',Times,serif;
+    --f-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-pen:cubic-bezier(.6,.05,.25,1);
+    --gutter:max(20px, env(safe-area-inset-left, 0px));
+    --gutter-r:max(20px, env(safe-area-inset-right, 0px));
+    color-scheme:light;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--azure-ink);outline-offset:3px;border-radius:4px}
+  .wrap{max-width:1200px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter-r)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .kicker{font:600 12px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--pencil)}
+  .kicker b{color:var(--gold-ink);font-weight:700}
+  h1,h2,h3{font-family:var(--f-display);text-wrap:balance;letter-spacing:-.035em;font-weight:800}
+  h2.sec-h{font-size:clamp(36px,5vw,64px);line-height:1;margin-top:16px;font-variation-settings:"opsz" 96}
+  .sec-sub{color:var(--graphite);font-size:18px;line-height:1.6;margin-top:18px;max-width:33em;font-weight:500}
+  .sec{padding-block:120px}
+  mark{color:inherit;background:none}
+
+  /* highlighter: one strip that sweeps line by line (box-decoration slice) */
+  .hl{background-image:linear-gradient(104deg,transparent .3em,var(--hl) .4em,var(--hl) calc(100% - .4em),transparent calc(100% - .3em));background-repeat:no-repeat;background-size:0% 78%;background-position:0 62%;transition:background-size .9s var(--ease-pen);padding-inline:.06em}
+  .hl.on{background-size:100% 78%}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;border-radius:999px;padding:13px 22px;cursor:pointer;border:1px solid transparent;transition:transform .2s var(--ease-out),background .2s,box-shadow .2s;white-space:nowrap}
+  .btn-ink{background:var(--ink);color:#fff;box-shadow:0 6px 18px -8px rgba(18,20,25,.5)}
+  .btn-ink:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(18,20,25,.55)}
+  .btn-ink:disabled{opacity:.7;cursor:progress}
+
+  /* ===== Nav ===== */
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper);z-index:60}
+  .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:rgba(246,246,242,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--rule)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font:800 19px var(--f-display);letter-spacing:-.03em}
+  .nav-links{display:flex;gap:28px;font-size:14.5px;font-weight:600;color:var(--graphite)}
+  .nav-links a:hover{color:var(--ink)}
+  .nav .btn{padding:10px 18px;font-size:14px}
+
+  /* ===== Hero ===== */
+  .hero{padding-block:72px 110px;position:relative;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:64px;align-items:center}
+  h1.hero-h{font-size:clamp(56px,7.6vw,108px);line-height:.92;margin-top:22px;font-variation-settings:"opsz" 96;letter-spacing:-.05em}
+  .hero-h .hl{animation:sweep 1.2s var(--ease-pen) .35s both}
+  @keyframes sweep{from{background-size:0% 78%}}
+  .hero-sub{font-size:19px;line-height:1.6;color:var(--graphite);margin-top:26px;max-width:29em;font-weight:500}
+  .hero-sub b{color:var(--ink);font-weight:700}
+  .quick{display:flex;gap:10px;margin-top:32px;max-width:470px;align-items:flex-end}
+  .quick .field{flex:1;min-width:0;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:10px;padding-bottom:6px}
+  .quick .field span{font:600 12px var(--f-mono);color:var(--pencil);letter-spacing:.08em}
+  .quick input{flex:1;min-width:0;background:transparent;border:0;outline:none;font:600 17px var(--f-ui);padding:8px 0}
+  .quick input::placeholder{color:#A6ABB3}
+  .quick:focus-within .field{border-color:var(--gold-ink)}
+  .wl-msg{font-size:14.5px;margin-top:14px;font-weight:600;display:none}
+  .wl-msg.ok{display:inline-block;color:var(--green-ink)}
+  .wl-msg.err{display:block;color:var(--redpen)}
+  .hero-note{font-size:13px;color:var(--pencil);margin-top:12px;font-weight:500}
+
+  /* sheet stack */
+  .stack{position:relative}
+  .stack-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 26px 4px}
+  .stack-tabs .lbl{font:600 11.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pencil);margin-right:6px}
+  .stack-tabs button{position:relative;overflow:hidden;border:1px solid var(--rule2);background:var(--sheet);border-radius:999px;padding:7px 13px;font:600 12.5px var(--f-ui);color:var(--graphite);cursor:pointer;transition:all .25s}
+  .stack-tabs button:hover{color:var(--ink);border-color:var(--pencil)}
+  .stack-tabs button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .stack-tabs .prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--hl);transform:scaleX(0);transform-origin:left}
+  .sheets{display:grid;padding-top:24px}
+  .sheet{grid-area:1/1;display:flex;flex-direction:column;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:30px 30px 22px;box-shadow:0 1px 0 rgba(18,20,25,.04),0 22px 50px -24px rgba(18,20,25,.28);transition:transform .8s var(--ease-out),box-shadow .8s;will-change:transform}
+  .sheet[data-pos="0"]{z-index:3;transform:rotate(-.7deg)}
+  .sheet[data-pos="1"]{z-index:2;transform:translate(16px,-14px) rotate(1.4deg);box-shadow:0 10px 30px -20px rgba(18,20,25,.25)}
+  .sheet[data-pos="2"]{z-index:1;transform:translate(-14px,-26px) rotate(-2.4deg);box-shadow:0 10px 30px -20px rgba(18,20,25,.2)}
+  .sheet:not([data-pos="0"]):not(.leaving) .sh-inner{visibility:hidden}
+  .sh-inner{flex:1;display:flex;flex-direction:column}
+  .sh-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:3px double var(--rule2);padding-bottom:12px}
+  .sh-kind{font:700 11px var(--f-mono);letter-spacing:.14em;color:var(--pencil);text-transform:uppercase}
+  .sh-title{font:700 22px/1.2 var(--f-doc);margin-top:4px}
+  .sh-meta{font:500 11px/1.5 var(--f-mono);color:var(--pencil);text-align:right;align-self:end}
+  .sh-body{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 196px;gap:28px;margin-block:18px 22px}
+  .doc{font:400 15.5px/1.72 var(--f-doc);color:#23262C;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+  .doc .hl{position:relative}
+  .doc .hl::after{content:attr(data-n);position:relative;top:-.55em;margin-left:2px;display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--ink);color:#fff;font:700 9px/1 var(--f-mono);vertical-align:baseline;opacity:0;transform:scale(.4);transition:all .35s var(--ease-out) .5s}
+  .doc .hl.on::after{opacity:1;transform:none}
+  .notes{list-style:none;position:relative}
+  .notes li{display:flex;gap:9px;font-size:13.5px;line-height:1.45;font-weight:600;color:var(--ink);opacity:0;transform:translateX(12px);transition:opacity .5s var(--ease-out),transform .6s var(--ease-out),top .4s}
+  .notes li.on{opacity:1;transform:none}
+  .notes li+li{margin-top:12px}
+  .placed .notes li{position:absolute;left:0;right:0;margin:0}
+  .notes .nn{flex:none;width:18px;height:18px;border-radius:50%;background:var(--hl);display:grid;place-items:center;font:700 10px var(--f-mono);margin-top:1px}
+  .sh-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:12px;border-top:1px solid var(--rule);font:500 11.5px var(--f-mono);color:var(--pencil)}
+  .sh-foot span:first-child{display:flex;align-items:center;gap:8px;color:var(--graphite)}
+  .stack-cap{font-size:12.5px;color:var(--pencil);margin-top:18px;text-align:center;font-weight:500}
+
+  /* ===== Jargon tax ===== */
+  .jargon{list-style:none;margin-top:60px;border-top:1px solid var(--ink)}
+  .jr{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1.1fr);align-items:center;gap:20px;padding-block:30px;border-bottom:1px solid var(--rule2)}
+  .jr-src{font:italic 400 clamp(20px,2.2vw,27px)/1.35 var(--f-doc);color:var(--pencil)}
+  .jr-src span{background-image:linear-gradient(transparent 54%,var(--redpen) 54%,var(--redpen) calc(54% + 2.5px),transparent calc(54% + 2.5px));background-repeat:no-repeat;background-size:100% 100%;transition:background-size .8s var(--ease-pen)}
+  .jr-arrow{font:500 22px var(--f-mono);color:var(--gold-ink);text-align:center;transition:opacity .4s .3s,transform .5s var(--ease-out) .3s}
+  .jr-plain{font:700 clamp(21px,2.3vw,29px)/1.25 var(--f-display);letter-spacing:-.02em;transition:clip-path 1s var(--ease-pen) .45s}
+  .js .jr:not(.on) .jr-src span{background-size:0% 100%}
+  .js .jr:not(.on) .jr-src{color:var(--graphite)}
+  .js .jr:not(.on) .jr-arrow{opacity:0;transform:translateX(-8px)}
+  .js .jr:not(.on) .jr-plain{clip-path:inset(0 100% 0 0)}
+  .jr-src{transition:color .6s}
+
+  /* ===== TOC ===== */
+  .toc{margin-top:60px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;box-shadow:0 22px 50px -30px rgba(18,20,25,.25);padding:34px 38px 20px}
+  .toc-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:3px double var(--rule2);font:700 11.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--pencil)}
+  .toc-row{display:grid;grid-template-columns:96px minmax(0,.85fr) minmax(0,1.15fr);gap:22px;align-items:baseline;padding-block:22px;border-bottom:1px solid var(--rule)}
+  .toc-row:last-child{border-bottom:0}
+  .toc-item{font:700 13px var(--f-mono);color:var(--gold-ink)}
+  .toc-name{display:flex;align-items:baseline;gap:10px;font:400 19px var(--f-doc);color:var(--graphite);min-width:0}
+  .toc-name i{flex:1;min-width:20px;border-bottom:2px dotted var(--rule2);transform-origin:left;transition:transform 1s var(--ease-pen)}
+  .js .toc-row:not(.in) .toc-name i{transform:scaleX(0)}
+  .toc-petyr b{display:block;font:800 21px/1.2 var(--f-display);letter-spacing:-.02em}
+  .toc-petyr p{color:var(--graphite);font-size:15px;line-height:1.55;margin-top:6px;font-weight:500}
+  .js .toc-row .toc-petyr{transition:opacity .8s var(--ease-out) .25s,transform .8s var(--ease-out) .25s}
+  .js .toc-row:not(.in) .toc-petyr{opacity:0;transform:translateX(16px)}
+
+  /* ===== Compare ===== */
+  .cmp-wrap{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:64px;align-items:center}
+  .compare{position:relative;display:grid;border-radius:8px;overflow:hidden;border:1px solid var(--rule2);background:var(--sheet);box-shadow:0 30px 60px -34px rgba(18,20,25,.35);--pos:50%;touch-action:pan-y;user-select:none}
+  .cmp-layer{grid-area:1/1;padding:30px 30px 28px}
+  .cmp-before{background:var(--sheet)}
+  .cmp-before .doc{font-size:14.5px;line-height:1.7;color:#30343B}
+  .cmp-before h4{font:700 18px var(--f-doc);margin-bottom:12px}
+  .cmp-after{background:#16181D;color:#F4F4F0;clip-path:inset(0 0 0 var(--pos))}
+  .cmp-tag{display:inline-block;font:700 10.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;border-radius:4px;margin-bottom:16px}
+  .cmp-before .cmp-tag{background:#EEEFEA;color:var(--pencil)}
+  .cmp-after .cmp-tag{background:rgba(230,184,96,.16);color:var(--gold)}
+  .cmp-after h4{font:800 21px/1.2 var(--f-display);letter-spacing:-.02em}
+  .cmp-after ul{list-style:none;display:grid;gap:10px;margin-top:14px}
+  .cmp-after li{display:flex;gap:10px;font-size:15px;line-height:1.5;font-weight:500;color:#DADDE3}
+  .cmp-after li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:8px}
+  .cmp-after li b{color:#fff}
+  .chips-d{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+  .chips-d span{font:600 11px var(--f-mono);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:6px 10px;color:#B9BEC8}
+  .chips-d span.warn{color:#FFB454;border-color:rgba(255,180,84,.4)}
+  .cmp-after .read{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1);font-size:14.5px;color:#B9BEC8;line-height:1.55}
+  .cmp-after .read b{display:block;font:700 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:#F4F4F0;margin-bottom:5px}
+  .cmp-handle{position:absolute;top:0;bottom:0;left:var(--pos);width:2px;margin-left:-1px;background:var(--hl);pointer-events:none;z-index:2}
+  .cmp-handle span{position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:var(--hl);display:grid;place-items:center;box-shadow:0 6px 20px -4px rgba(18,20,25,.4);font:700 15px var(--f-mono);color:var(--ink)}
+  .cmp-range{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;z-index:3;margin:0}
+  .compare:has(.cmp-range:focus-visible){outline:2px solid var(--azure-ink);outline-offset:4px}
+  .cmp-cap{font-size:12.5px;color:var(--pencil);margin-top:14px;font-weight:500}
+
+  /* ===== Brief receipt ===== */
+  .brief-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:72px;align-items:center}
+  .printer{position:relative;max-width:380px;margin:0 auto;width:100%}
+  .slot{height:22px;border-radius:12px;background:linear-gradient(#2A2D34,#16181D);box-shadow:inset 0 -3px 0 rgba(255,255,255,.08),0 12px 30px -12px rgba(18,20,25,.5);position:relative;z-index:2}
+  .feed{overflow:hidden;margin:-11px 14px 0;padding-top:11px}
+  .receipt{background:var(--sheet);padding:26px 24px 30px;box-shadow:0 18px 40px -26px rgba(18,20,25,.4);font:500 13px/1.6 var(--f-mono);color:#262A31;position:relative;-webkit-mask-image:linear-gradient(#000 calc(100% - 10px),transparent calc(100% - 10px)),conic-gradient(from -45deg at 50% 100%,#000 90deg,transparent 0) 0 100%/12px 12px repeat-x;mask-image:linear-gradient(#000 calc(100% - 10px),transparent calc(100% - 10px)),conic-gradient(from -45deg at 50% 100%,#000 90deg,transparent 0) 0 100%/12px 12px repeat-x}
+  .js .feed:not(.in) .receipt{transform:translateY(-100%)}
+  .feed.in .receipt{animation:print 2.6s steps(16,end) both}
+  @keyframes print{from{transform:translateY(-100%)}to{transform:none}}
+  .rc-head{text-align:center;border-bottom:1px dashed var(--rule2);padding-bottom:12px;margin-bottom:12px}
+  .rc-head b{display:block;font:800 18px var(--f-display);letter-spacing:-.01em;color:var(--ink)}
+  .rc-row{display:flex;gap:10px;padding-block:8px}
+  .rc-row .n{color:var(--gold-ink);font-weight:700}
+  .rc-row b{color:var(--ink)}
+  .rc-foot{border-top:1px dashed var(--rule2);margin-top:10px;padding-top:12px;text-align:center;color:var(--pencil);font-size:11.5px}
+  .channels{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+  .channels span{font:600 12px var(--f-mono);border:1px solid var(--rule2);background:var(--sheet);border-radius:999px;padding:7px 12px;color:var(--graphite)}
+
+  /* ===== Sign-up form ===== */
+  .join{padding-block:120px 130px;background:linear-gradient(180deg,var(--paper),#EEEFEA)}
+  .join-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:72px;align-items:start}
+  .signform{position:relative;overflow:hidden;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:34px 36px 30px;box-shadow:0 30px 60px -34px rgba(18,20,25,.35)}
+  .sf-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px double var(--rule2);font:700 11.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pencil)}
+  .sf-head b{color:var(--ink)}
+  fieldset{border:0;margin-top:22px}
+  legend{font:700 15px var(--f-ui);margin-bottom:12px}
+  legend small{font-weight:500;color:var(--pencil);font-size:13px;margin-left:6px}
+  .boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 18px}
+  .box{display:flex;align-items:center;gap:10px;cursor:pointer;font:400 16px var(--f-doc);color:#2A2E35}
+  .box input{position:absolute;opacity:0;pointer-events:none}
+  .box i{flex:none;width:18px;height:18px;border:1.5px solid var(--ink);border-radius:2px;position:relative;transition:background .2s}
+  .box i::after{content:"";position:absolute;left:4px;top:0;width:6px;height:11px;border:solid var(--ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);transition:transform .25s var(--ease-out)}
+  .box input[type=radio]+i{border-radius:50%}
+  .box input[type=radio]+i::after{left:3.5px;top:3.5px;width:8px;height:8px;border:0;border-radius:50%;background:var(--ink);transform:scale(0)}
+  .box input:checked+i{background:var(--hl)}
+  .box input:checked+i::after{transform:rotate(45deg) scale(1)}
+  .box input[type=radio]:checked+i::after{transform:scale(1)}
+  .box input:focus-visible+i{outline:2px solid var(--azure-ink);outline-offset:2px}
+  .sig{margin-top:26px}
+  .sig label{display:block;font:700 15px var(--f-ui);margin-bottom:6px}
+  .sig-row{display:flex;gap:14px;align-items:flex-end}
+  .sig-line{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+  .sig-line .x{font:500 22px var(--f-doc);color:var(--pencil)}
+  .sig-line input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:italic 400 22px var(--f-doc);padding:6px 0}
+  .sig-line input::placeholder{color:#B3B7BE}
+  .signform:focus-within .sig-line{border-color:var(--gold-ink)}
+  .sf-fine{font-size:12.5px;color:var(--pencil);margin-top:14px;font-weight:500}
+  .stamp{position:absolute;right:40px;bottom:92px;padding:10px 16px;border:3px double var(--redpen);color:var(--redpen);border-radius:6px;font:800 22px/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase;transform:rotate(-12deg) scale(2.4);opacity:0;pointer-events:none;mix-blend-mode:multiply;text-align:center}
+  .stamp small{display:block;font:600 9.5px var(--f-mono);letter-spacing:.14em;margin-top:5px}
+  .signform.stamped .stamp{animation:slam .55s cubic-bezier(.2,1.5,.45,1) forwards}
+  @keyframes slam{to{opacity:.88;transform:rotate(-12deg) scale(1)}}
+  .signform.stamped{animation:thud .35s ease-out .32s}
+  @keyframes thud{40%{transform:translateY(3px)}}
+  .join .quote{font:400 italic clamp(24px,2.6vw,32px)/1.4 var(--f-doc);color:var(--graphite);margin-top:30px;max-width:22em}
+  .join .quote .hl{color:var(--ink)}
+  .join .quote small{display:block;font:600 12px var(--f-mono);font-style:normal;letter-spacing:.1em;color:var(--pencil);margin-top:14px;text-transform:uppercase}
+
+  .site-foot{border-top:1px solid var(--rule2);padding-block:30px 34px;background:#EEEFEA}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;font:500 12.5px var(--f-mono);color:var(--pencil)}
+  .foot .brand{font-size:16px;color:var(--ink)}
+  .foot nav{display:flex;gap:20px;flex-wrap:wrap}
+  .foot nav a:hover{color:var(--ink)}
+
+  .js [data-reveal]{transition:opacity .9s var(--ease-out),transform 1s var(--ease-out)}
+  .js [data-reveal]:not(.in){opacity:0;transform:translateY(24px)}
+
+  /* concept switcher — remove when promoting */
+  .cswitch{position:fixed;left:max(14px, env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;background:rgba(18,20,25,.9);font:600 11.5px var(--f-mono)}
+  .cswitch a{padding:7px 10px;border-radius:999px;color:#A9AEB8}
+  .cswitch a[aria-current]{background:var(--hl);color:var(--ink)}
+  .cswitch a:hover:not([aria-current]){color:#fff}
+
+  @media (max-width:980px){
+    .hero-grid,.cmp-wrap,.brief-grid,.join-grid{grid-template-columns:minmax(0,1fr);gap:52px}
+    .nav-links{display:none}
+    .toc-row{grid-template-columns:80px minmax(0,1fr);gap:8px 18px}
+    .toc-petyr{grid-column:2}
+  }
+  @media (max-width:640px){
+    .sec{padding-block:84px}
+    .hero{padding-block:44px 84px}
+    .sheet{padding:22px 18px 16px}
+    .sh-body{grid-template-columns:minmax(0,1fr);gap:16px}
+    .sh-meta{text-align:left}
+    .doc{text-align:left;font-size:15px}
+    .sheet[data-pos="1"]{transform:translate(8px,-12px) rotate(1.4deg)}
+    .sheet[data-pos="2"]{transform:translate(-8px,-22px) rotate(-2.2deg)}
+    .jr{grid-template-columns:minmax(0,1fr);gap:8px;padding-block:24px}
+    .jr-arrow{text-align:left;transform:rotate(90deg);width:max-content}
+    .js .jr:not(.on) .jr-arrow{transform:rotate(90deg) translateX(-8px)}
+    .toc{padding:24px 20px 10px}
+    .toc-row{grid-template-columns:minmax(0,1fr)}
+    .toc-petyr{grid-column:1}
+    .boxes{grid-template-columns:minmax(0,1fr)}
+    .signform{padding:26px 20px 24px}
+    .sig-row{flex-direction:column;align-items:stretch}
+    .stamp{right:16px;bottom:150px;font-size:18px}
+    .quick{flex-direction:column;align-items:stretch}
+    .cmp-layer{padding:22px 20px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
+    .js [data-reveal]:not(.in),.js .toc-row:not(.in) .toc-petyr{opacity:1;transform:none}
+    .js .jr:not(.on) .jr-src span{background-size:100% 100%}
+    .js .jr:not(.on) .jr-arrow{opacity:1;transform:none}
+    .js .jr:not(.on) .jr-plain{clip-path:none}
+    .js .toc-row:not(.in) .toc-name i{transform:none}
+    .js .feed:not(.in) .receipt{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#F3D08A"/><stop offset="1" stop-color="#E6B860"/></linearGradient>
+    <symbol id="logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="url(#pg)"/><path d="M10 23V9.5h6.4c2.9 0 4.8 1.7 4.8 4.3 0 2.6-1.9 4.3-4.8 4.3H13V23h-3Zm3-7.4h2.9c1.3 0 2.1-.7 2.1-1.8s-.8-1.8-2.1-1.8H13v3.6Z" fill="#1A1404"/></symbol>
+    <symbol id="bird-mini" viewBox="20 40 180 160"><ellipse cx="110" cy="124" rx="62" ry="58" fill="#E6B860"/><circle cx="92" cy="108" r="13" fill="#fff"/><circle cx="128" cy="108" r="13" fill="#fff"/><circle cx="95" cy="110" r="6" fill="#241803"/><circle cx="131" cy="110" r="6" fill="#241803"/><path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/></symbol>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><svg width="30" height="30"><use href="#logo"/></svg>Petyr</a>
+    <div class="nav-links"><a href="#jargon">Plain English</a><a href="#reads">What Petyr reads</a><a href="#tokens">Token terms</a><a href="#briefs">Briefs</a></div>
+    <a class="btn btn-ink" href="#join">Join the waitlist</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker"><b>Petyr</b> · AI research for stocks &amp; tokenized assets</p>
+      <h1 class="hero-h">Know <mark class="hl on">before</mark> you&nbsp;invest.</h1>
+      <p class="hero-sub">Petyr reads the <b>10-K</b>, the <b>attestation report</b> and the <b>offering memo</b>, then hands you the plain-English version. What it means, what could go wrong, and who it's for, before you buy.</p>
+      <form class="quick" id="waitlist-form" data-source="decoded-hero">
+        <div class="field">
+          <label class="sr" for="wl-email">Email address</label>
+          <span aria-hidden="true">EMAIL</span>
+          <input type="email" name="email" id="wl-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+        </div>
+        <button class="btn btn-ink" type="submit">Join the waitlist</button>
+      </form>
+      <div class="wl-msg" id="wl-msg" role="status"></div>
+      <p class="hero-note">One email when the app lands. Beta invites go to the waitlist first.</p>
+    </div>
+
+    <div class="stack" id="stack">
+      <div class="stack-tabs" role="tablist" aria-label="Example documents">
+        <span class="lbl">Reading</span>
+        <button role="tab" aria-selected="true" data-i="0">10-K<span class="prog"></span></button>
+        <button role="tab" aria-selected="false" data-i="1">Attestation<span class="prog"></span></button>
+        <button role="tab" aria-selected="false" data-i="2">Offering memo<span class="prog"></span></button>
+      </div>
+      <div class="sheets">
+        <article class="sheet" data-pos="0" data-i="0" aria-label="Example 10-K risk factors, annotated">
+          <div class="sh-inner">
+            <header class="sh-head">
+              <div><div class="sh-kind">Form 10-K · Item 1A</div><div class="sh-title">Risk Factors</div></div>
+              <div class="sh-meta">Example: consumer-tech company<br>page 14 of 121</div>
+            </header>
+            <div class="sh-body">
+              <p class="doc">Our operations and performance depend significantly on global and regional economic conditions. <mark class="hl on" data-n="1">A significant portion of our net sales is derived from customers in Greater China</mark>, and changes in trade policy, tariffs or export controls could reduce demand for our products or increase our costs. <mark class="hl on" data-n="2">We are subject to the Digital Markets Act and similar regulations</mark> that may require us to change how we operate our platforms and may reduce revenue from services. In addition, <mark class="hl on" data-n="3">our hardware net sales are subject to product cycles and consumer demand</mark>, which can cause quarterly results to fluctuate materially.</p>
+              <ol class="notes">
+                <li class="on" data-n="1"><span class="nn">1</span><span>A big slice of sales comes from China. Trade fights can hit them hard.</span></li>
+                <li class="on" data-n="2"><span class="nn">2</span><span>New EU rules could force App Store changes and cut services money.</span></li>
+                <li class="on" data-n="3"><span class="nn">3</span><span>Phone sales rise and fall with launches, so quarters will be bumpy.</span></li>
+              </ol>
+            </div>
+            <footer class="sh-foot"><span><svg width="18" height="16"><use href="#bird-mini"/></svg>Petyr's notes</span><span>121 pages · 3 notes</span></footer>
+          </div>
+        </article>
+        <article class="sheet" data-pos="1" data-i="1" aria-label="Example reserve attestation, annotated">
+          <div class="sh-inner">
+            <header class="sh-head">
+              <div><div class="sh-kind">Independent accountant's report</div><div class="sh-title">Reserve Attestation</div></div>
+              <div class="sh-meta">Example: tokenized treasury fund<br>as of September 30</div>
+            </header>
+            <div class="sh-body">
+              <p class="doc">We have examined management's assertion that, as of September 30, <mark class="hl on" data-n="1">the fair value of the Reserve Assets held in segregated custody accounts equaled or exceeded the number of Tokens outstanding</mark>. The Reserve Assets consist of <mark class="hl on" data-n="2">U.S. Treasury bills with remaining maturities of less than 90 days and cash held at regulated banks</mark>. Our examination did not extend to <mark class="hl on" data-n="3">the operation of the smart contracts or the controls over the minting and burning of Tokens</mark>, and accordingly we express no opinion thereon.</p>
+              <ol class="notes">
+                <li class="on" data-n="1"><span class="nn">1</span><span>On Sept 30 there was at least $1 of assets behind every token.</span></li>
+                <li class="on" data-n="2"><span class="nn">2</span><span>The backing is very short-term US government debt and bank cash.</span></li>
+                <li class="on" data-n="3"><span class="nn">3</span><span>Nobody audited the code that creates tokens. That's a separate risk.</span></li>
+              </ol>
+            </div>
+            <footer class="sh-foot"><span><svg width="18" height="16"><use href="#bird-mini"/></svg>Petyr's notes</span><span>9 pages · 3 notes</span></footer>
+          </div>
+        </article>
+        <article class="sheet" data-pos="2" data-i="2" aria-label="Example offering memorandum, annotated">
+          <div class="sh-inner">
+            <header class="sh-head">
+              <div><div class="sh-kind">Offering memorandum · §4.2</div><div class="sh-title">Eligibility &amp; Redemption</div></div>
+              <div class="sh-meta">Example: tokenized real-estate fund<br>page 22 of 64</div>
+            </header>
+            <div class="sh-body">
+              <p class="doc">The Tokens have not been registered under the Securities Act and <mark class="hl on" data-n="1">are offered only to persons who are not U.S. Persons within the meaning of Regulation S</mark>. Each purchaser must <mark class="hl on" data-n="2">complete the Issuer's identity verification and accreditation procedures</mark> prior to acquiring Tokens from the Issuer. <mark class="hl on" data-n="3">Redemptions may be suspended at the discretion of the Manager</mark> during periods of market disruption or where the Fund holds insufficient liquid assets.</p>
+              <ol class="notes">
+                <li class="on" data-n="1"><span class="nn">1</span><span>Not available to people in the US.</span></li>
+                <li class="on" data-n="2"><span class="nn">2</span><span>To buy direct, you must pass the issuer's ID and wealth checks.</span></li>
+                <li class="on" data-n="3"><span class="nn">3</span><span>The manager can pause withdrawals when markets get rough.</span></li>
+              </ol>
+            </div>
+            <footer class="sh-foot"><span><svg width="18" height="16"><use href="#bird-mini"/></svg>Petyr's notes</span><span>64 pages · 3 notes</span></footer>
+          </div>
+        </article>
+      </div>
+      <p class="stack-cap">Example excerpts written for this preview. Petyr works from the real filings.</p>
+    </div>
+  </div>
+</header>
+
+<section class="sec" id="jargon" aria-labelledby="jg-h" style="padding-top:40px">
+  <div class="wrap">
+    <p class="kicker">The jargon tax</p>
+    <h2 class="sec-h" id="jg-h">Finance has its own language.<br>Petyr translates.</h2>
+    <p class="sec-sub">Most people don't lose money because markets are hard. They lose it because nobody explained what the words meant.</p>
+    <ol class="jargon">
+      <li class="jr"><span class="jr-src"><span>EBITDA margin compression</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">They're keeping less of every dollar they earn.</span></li>
+      <li class="jr"><span class="jr-src"><span>Forward P/E of 31.4× on consensus estimates</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">You pay $31 for every $1 they're expected to earn next year.</span></li>
+      <li class="jr"><span class="jr-src"><span>Trades at a 2.1% discount to NAV</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">The token sells for less than what's inside it.</span></li>
+      <li class="jr"><span class="jr-src"><span>Redemptions settle T+1, subject to gating provisions</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">You can cash out in a day, unless the issuer pauses withdrawals.</span></li>
+      <li class="jr"><span class="jr-src"><span>Offered to non-U.S. persons under Regulation S</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">Not for people in the US.</span></li>
+      <li class="jr"><span class="jr-src"><span>Bridged representation via a third-party messaging protocol</span></span><span class="jr-arrow" aria-hidden="true">→</span><span class="jr-plain">This copy of the token was moved from another chain. The bridge can break.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec" id="reads" aria-labelledby="rd-h" style="padding-top:20px">
+  <div class="wrap">
+    <p class="kicker">What Petyr reads, and what you get</p>
+    <h2 class="sec-h" id="rd-h">The 10-K, rearranged<br>for a human.</h2>
+    <div class="toc" role="list">
+      <div class="toc-head"><span>Form 10-K · Table of contents</span><span>Petyr's version</span></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Item 1</span><span class="toc-name">Business<i></i></span><div class="toc-petyr"><b>Ask anything, get a card</b><p>"Is PAXG really backed?" comes back as a verdict, three numbers and one sentence of why.</p></div></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Item 1A</span><span class="toc-name">Risk Factors<i></i></span><div class="toc-petyr"><b>Risks, named plainly</b><p>China exposure. US persons excluded. Single custodian. The risks that matter show up as chips on every card.</p></div></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Item 7</span><span class="toc-name">Management's Discussion<i></i></span><div class="toc-petyr"><b>Every filing in three bullets</b><p>New 10-Ks, 10-Qs and 8-Ks for the companies you follow, boiled down to what changed.</p></div></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Item 8</span><span class="toc-name">Financial Statements<i></i></span><div class="toc-petyr"><b>The math, done properly</b><p>23 analysis methods, from DCF and comps to Piotroski and Altman Z, run on real filing and market data.</p></div></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Item 9A</span><span class="toc-name">Controls &amp; Procedures<i></i></span><div class="toc-petyr"><b>Sourced and dated</b><p>Numbers come from data, never the model. Every verdict says what it's based on and when it was made.</p></div></div>
+      <div class="toc-row" role="listitem" data-row><span class="toc-item">Ex. 99</span><span class="toc-name">Press Releases<i></i></span><div class="toc-petyr"><b>Briefs before breakfast</b><p>A morning note on what changed in your holdings: earnings, filings, attestations, verdicts that moved.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tokens" aria-labelledby="tk-h" style="padding-top:20px">
+  <div class="wrap cmp-wrap">
+    <div>
+      <p class="kicker">Tokens decoded</p>
+      <h2 class="sec-h" id="tk-h">Tokens have fine print too.</h2>
+      <p class="sec-sub">Tokenized treasuries, gold, real estate and stock tokens all come with terms: who can hold them, how you get your money out, what actually backs them. Drag across to see Petyr's version.</p>
+    </div>
+    <div>
+      <div class="compare" id="compare">
+        <div class="cmp-layer cmp-before" aria-hidden="true">
+          <span class="cmp-tag">Original terms</span>
+          <h4>§6.1 Redemption of Tokens</h4>
+          <p class="doc">Subject to the Issuer's prior completion of its onboarding procedures with respect to the redeeming Holder, Tokens may be redeemed at the then-prevailing Net Asset Value per Token, less applicable fees, provided that any redemption request shall be for not less than 50,000 Tokens. The Tokens are offered solely to persons who are not U.S. Persons. Holders who have not completed onboarding may transfer Tokens only on the secondary market, at prices which may differ materially from the Net Asset Value.</p>
+        </div>
+        <div class="cmp-layer cmp-after">
+          <span class="cmp-tag">Petyr's version</span>
+          <h4>Example treasury token, decoded</h4>
+          <ul>
+            <li><span><b>Not for people in the US.</b></span></li>
+            <li><span>Cashing out directly needs <b>issuer KYC</b> and at least <b>50,000 tokens</b>.</span></li>
+            <li><span>Smaller holders exit on a DEX, where the price can drift from NAV.</span></li>
+          </ul>
+          <div class="chips-d"><span class="warn">US persons excluded</span><span>Min. redemption 50K</span><span>Exit via DEX</span></div>
+          <p class="read"><b>Petyr's read</b>Check you're eligible, and that there's enough DEX liquidity for your size, before relying on it.</p>
+        </div>
+        <div class="cmp-handle" aria-hidden="true"><span>⇆</span></div>
+        <label class="sr" for="cmp-range">Slide between the original terms and Petyr's version</label>
+        <input class="cmp-range" id="cmp-range" type="range" min="0" max="100" value="50">
+      </div>
+      <p class="cmp-cap">Example terms written for this preview.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="briefs" aria-labelledby="bf-h" style="padding-top:20px">
+  <div class="wrap brief-grid">
+    <div data-reveal>
+      <p class="kicker">Briefs &amp; alerts</p>
+      <h2 class="sec-h" id="bf-h">Your morning note,<br>printed at 7:00.</h2>
+      <p class="sec-sub">Petyr watches your stocks and tokens overnight and writes up what changed. A new filing, an earnings date, a fresh attestation, a verdict that moved. Three lines, and the full reasoning if you want it.</p>
+      <div class="channels"><span>Push</span><span>WhatsApp</span><span>In-app feed</span></div>
+    </div>
+    <div class="printer" aria-label="Example morning brief">
+      <div class="slot"></div>
+      <div class="feed" id="feed">
+        <div class="receipt">
+          <div class="rc-head"><b>Morning brief</b>Tue 27 Oct · 07:00 · 5 holdings</div>
+          <div class="rc-row"><span class="n">01</span><span><b>TSLA reports tomorrow.</b> Margins are the number to watch.</span></div>
+          <div class="rc-row"><span class="n">02</span><span><b>New 8-K from AAPL</b>, decoded: a board change, nothing financial.</span></div>
+          <div class="rc-row"><span class="n">03</span><span><b>USDY attestation is in.</b> Reserves still cover every token.</span></div>
+          <div class="rc-row"><span class="n">04</span><span><b>NVDA verdict changed:</b> fairly valued → priced for perfection.</span></div>
+          <div class="rc-foot">Research, not advice · petyr.ai</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="join" id="join" aria-labelledby="jn-h">
+  <div class="wrap join-grid">
+    <div>
+      <p class="kicker">Waitlist</p>
+      <h2 class="sec-h" id="jn-h">Sign here.<br>Skip the jargon.</h2>
+      <p class="sec-sub">Join the waitlist for one email when the app is ready and an early invite to the research preview.</p>
+      <p class="quote">“Most people don't lose money in the market because it's hard. They lose it because <mark class="hl" id="quote-hl">nobody explained</mark> what was actually happening.”<small>Petyr</small></p>
+    </div>
+    <form class="signform" id="waitlist-form-foot" data-source="decoded-foot">
+      <div class="sf-head"><b>Form PTR-1</b><span>Waitlist application</span></div>
+      <fieldset>
+        <legend>1. What should Petyr watch for you? <small>optional</small></legend>
+        <div class="boxes">
+          <label class="box"><input type="checkbox" name="interest" value="stocks" id="d-i-stocks"><i></i>Stocks</label>
+          <label class="box"><input type="checkbox" name="interest" value="tokenized-stocks" id="d-i-tstocks"><i></i>Tokenized stocks</label>
+          <label class="box"><input type="checkbox" name="interest" value="treasuries" id="d-i-treas"><i></i>Tokenized treasuries</label>
+          <label class="box"><input type="checkbox" name="interest" value="gold" id="d-i-gold"><i></i>Gold tokens</label>
+          <label class="box"><input type="checkbox" name="interest" value="real-estate" id="d-i-re"><i></i>Real estate tokens</label>
+          <label class="box"><input type="checkbox" name="interest" value="crypto" id="d-i-crypto"><i></i>Crypto majors</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>2. Where are you based? <small>optional</small></legend>
+        <div class="boxes">
+          <label class="box"><input type="radio" name="region" value="us" id="d-r-us"><i></i>United States</label>
+          <label class="box"><input type="radio" name="region" value="non-us" id="d-r-non"><i></i>Outside the US</label>
+        </div>
+      </fieldset>
+      <div class="sig">
+        <label for="wl-email-foot">3. Email address</label>
+        <div class="sig-row">
+          <div class="sig-line"><span class="x" aria-hidden="true">✕</span><input type="email" name="email" id="wl-email-foot" placeholder="you@email.com" required maxlength="254" autocomplete="email"></div>
+          <button class="btn btn-ink" type="submit">Sign up</button>
+        </div>
+      </div>
+      <div class="wl-msg" id="wl-msg-foot" role="status"></div>
+      <p class="sf-fine">No spam. One email at launch, and a beta invite if you want one.</p>
+      <div class="stamp" aria-hidden="true">On the list<small>Petyr will be in touch</small></div>
+    </form>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap foot">
+    <a class="brand" href="#top"><svg width="24" height="24"><use href="#logo"/></svg>Petyr</a>
+    <nav aria-label="Footer"><a href="#jargon">Plain English</a><a href="#tokens">Token terms</a><a href="/app">Research preview</a><a href="https://x.com/PetyrAI" rel="noopener">@PetyrAI</a></nav>
+    <span>© 2026 Petyr · Research, not financial advice · Page 1 of 1</span>
+  </div>
+</footer>
+
+<!-- concept switcher — remove when promoting -->
+<nav class="cswitch" aria-label="Design concepts"><a href="index.html">All</a><a href="verdict.html">A</a><a href="decoded.html" aria-current="page">B</a><a href="vault.html">C</a></nav>
+
+<script src="/landing.js" defer></script>
+<script src="decoded.js" defer></script>
+</body>
+</html>

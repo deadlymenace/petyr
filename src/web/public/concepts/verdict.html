@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Petyr — Know before you invest</title>
+<!-- concept page: drop the robots tag when promoting to index.html -->
+<meta name="robots" content="noindex" />
+<meta name="description" content="Petyr is an AI research companion for stocks and tokenized assets. It reads the filing or the attestation, runs the numbers, and explains the risk in plain English, before you buy." />
+<meta property="og:title" content="Petyr — Know before you invest" />
+<meta property="og:description" content="Plain-English verdicts on stocks, tokenized treasuries, gold and more. Join the waitlist." />
+<meta name="theme-color" content="#07080B" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="icon" type="image/svg+xml" href="/bird.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Concept A · Verdict
+     Layout: product-led. The hero is the product answering live; the page
+     then walks the three depths (verdict → snapshot → reasoning), the
+     companion briefs, and the trust rules. Brand tokens from product-plan §1. */
+  :root{
+    --bg:#07080B; --bg2:#0A0C11; --surface:#0E1118; --surface2:#141822; --raise:#1A1F2B;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+    --ink:#F4F4F0; --muted:#A0A7B3; --muted2:#737A86;
+    --gold:#E6B860; --gold2:#F3D08A; --gold-ink:#1A1404;
+    --green:#34D399; --red:#FF7A7A; --azure:#86A9FF; --amber:#FFB454;
+    --f-ui:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --f-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-spring:cubic-bezier(.34,1.56,.64,1);
+    --gutter:max(20px, env(safe-area-inset-left, 0px));
+    --gutter-r:max(20px, env(safe-area-inset-right, 0px));
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--gold2);outline-offset:3px;border-radius:6px}
+  .wrap{max-width:1200px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter-r)}
+  .mono{font-family:var(--f-mono)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .eyebrow{font:700 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  h1,h2,h3{text-wrap:balance;letter-spacing:-.03em}
+  h2.sec-h{font-size:clamp(34px,4.6vw,56px);line-height:1.04;font-weight:800;margin-top:16px}
+  h2.sec-h .lt{color:var(--muted);font-weight:600}
+  .sec-sub{color:var(--muted);font-size:17.5px;line-height:1.6;margin-top:18px;max-width:34em;font-weight:500}
+  .gold-grad{background:linear-gradient(100deg,var(--gold2) 0%,var(--gold) 40%,#FFE7B0 50%,var(--gold) 60%,var(--gold2) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 7s ease-in-out infinite}
+  @keyframes sheen{0%,70%{background-position:100% 0}100%{background-position:-50% 0}}
+  .sec{padding-block:112px}
+  .rule{height:1px;background:var(--line)}
+
+  /* ===== Buttons ===== */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;border-radius:12px;padding:13px 20px;cursor:pointer;border:1px solid transparent;transition:transform .2s var(--ease-out),box-shadow .2s,background .2s;white-space:nowrap}
+  .btn-gold{background:linear-gradient(120deg,var(--gold2),var(--gold));color:var(--gold-ink);box-shadow:0 8px 28px -6px rgba(230,184,96,.45)}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 12px 34px -6px rgba(230,184,96,.6)}
+  .btn-gold:active{transform:translateY(1px)}
+  .btn-gold:disabled{opacity:.7;cursor:progress}
+
+  /* ===== Nav ===== */
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+  .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);background:rgba(7,8,11,.7);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:66px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .nav-links{display:flex;gap:28px;font-size:14.5px;color:var(--muted);font-weight:600}
+  .nav-links a{transition:color .2s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav .btn{padding:10px 16px;font-size:14px}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;padding-block:84px 96px;overflow:hidden;isolation:isolate}
+  .aurora{position:absolute;inset:-20% -10% auto;height:760px;z-index:-1;pointer-events:none;filter:blur(90px);opacity:.55}
+  .aurora i{position:absolute;border-radius:50%;animation:drift 18s ease-in-out infinite alternate}
+  .aurora i:nth-child(1){width:560px;height:560px;left:2%;top:0;background:radial-gradient(circle,rgba(230,184,96,.38),transparent 65%)}
+  .aurora i:nth-child(2){width:520px;height:520px;right:4%;top:8%;background:radial-gradient(circle,rgba(110,155,255,.22),transparent 65%);animation-duration:22s;animation-delay:-6s}
+  .aurora i:nth-child(3){width:380px;height:380px;left:42%;top:30%;background:radial-gradient(circle,rgba(243,208,138,.18),transparent 65%);animation-duration:26s;animation-delay:-12s}
+  @keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,30px) scale(1.08)}100%{transform:translate(-40px,60px) scale(.95)}}
+  .grid-bg{position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 10%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 10%,transparent 75%);opacity:.5}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:56px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:7px 14px 7px 10px;background:rgba(255,255,255,.025);font-weight:600;transition:border-color .2s}
+  .pill:hover{border-color:rgba(230,184,96,.5)}
+  .pill .live{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(230,184,96,.6);animation:ping 2.4s var(--ease-out) infinite}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(230,184,96,.55)}80%,100%{box-shadow:0 0 0 9px rgba(230,184,96,0)}}
+  h1.hero-h{font-size:clamp(52px,7.4vw,98px);line-height:.96;font-weight:800;letter-spacing:-.045em;margin-top:26px}
+  .hero-h .line{display:block;overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
+  .hero-h .w{display:inline-block;animation:rise 1s var(--ease-out) both;animation-delay:calc(var(--i) * 80ms + 80ms)}
+  @keyframes rise{from{transform:translateY(108%)}}
+  .hero-sub{max-width:31em;color:var(--muted);font-size:18.5px;line-height:1.6;margin-top:26px;font-weight:500;animation:fadeUp .9s var(--ease-out) .45s both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}}
+
+  /* Waitlist */
+  .wl{margin-top:30px;max-width:500px;animation:fadeUp .9s var(--ease-out) .6s both}
+  .wl-row{display:flex;gap:10px;padding:6px;border:1px solid var(--line2);border-radius:16px;background:rgba(14,17,24,.8);transition:border-color .25s,box-shadow .25s}
+  .wl:focus-within .wl-row{border-color:rgba(230,184,96,.55);box-shadow:0 0 0 4px rgba(230,184,96,.1)}
+  .wl-row input{flex:1;min-width:0;background:transparent;border:0;padding:10px 12px;color:var(--ink);font:500 15.5px var(--f-ui);outline:none}
+  .wl-row input::placeholder{color:var(--muted2)}
+  .wl-extra{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--ease-out),opacity .4s;opacity:0}
+  .wl:focus-within .wl-extra,.wl:has(input[type=checkbox]:checked) .wl-extra,.wl:has(input[type=radio]:checked) .wl-extra,.wl-extra.open{grid-template-rows:1fr;opacity:1}
+  .wl-extra>div{overflow:hidden;min-height:0}
+  .wl-q{font-size:12.5px;color:var(--muted2);font-weight:600;margin:14px 0 8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{position:relative;cursor:pointer}
+  .chip input{position:absolute;opacity:0;pointer-events:none}
+  .chip span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:6px 11px;transition:all .2s var(--ease-out);user-select:none}
+  .chip span::before{content:"";width:6px;height:6px;border-radius:50%;border:1px solid var(--muted2);transition:all .2s}
+  .chip:hover span{border-color:rgba(255,255,255,.28);color:var(--ink)}
+  .chip input:checked+span{color:var(--ink);border-color:rgba(230,184,96,.6);background:rgba(230,184,96,.1)}
+  .chip input:checked+span::before{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px var(--gold)}
+  .chip input:focus-visible+span{outline:2px solid var(--gold2);outline-offset:2px}
+  .wl-note{font-size:12.5px;color:var(--muted2);margin-top:12px;font-weight:500}
+  .wl-msg{font-size:14px;margin-top:12px;font-weight:600;display:none}
+  .wl-msg.ok{display:block;color:var(--green)}
+  .wl-msg.err{display:block;color:var(--red)}
+  .hero-proof{display:flex;gap:30px;flex-wrap:wrap;margin-top:44px;list-style:none;color:var(--muted2);font-size:13px;font-weight:600;animation:fadeUp .9s var(--ease-out) .75s both}
+  .hero-proof b{display:block;color:var(--ink);font:600 24px/1.2 var(--f-mono);margin-bottom:2px;font-variant-numeric:tabular-nums}
+
+  /* ===== Ask card (hero stage) ===== */
+  .stage{position:relative;padding-top:64px;animation:fadeUp 1s var(--ease-out) .3s both}
+  .perch{position:absolute;right:30px;top:0;width:96px;z-index:2;pointer-events:none}
+  .ask{position:relative;border:1px solid var(--line2);border-radius:24px;padding:18px;background:linear-gradient(180deg,rgba(22,26,36,.94),rgba(10,12,17,.97));box-shadow:0 60px 120px -50px rgba(0,0,0,.95),0 0 100px -30px rgba(230,184,96,.22),inset 0 1px 0 rgba(255,255,255,.05)}
+  .ask-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-right:96px}
+  .ask-tab{position:relative;overflow:hidden;font:600 11.5px/1 var(--f-mono);letter-spacing:.02em;color:var(--muted2);border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 11px;cursor:pointer;transition:color .25s,border-color .25s,background .25s}
+  .ask-tab:hover{color:var(--ink)}
+  .ask-tab[aria-selected="true"]{color:var(--ink);border-color:rgba(230,184,96,.45);background:rgba(230,184,96,.08)}
+  .ask-tab .prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--gold);transform:scaleX(0);transform-origin:left}
+  .ask-q{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:14px;padding:12px 12px 12px 14px;min-height:50px}
+  .ask-q .qt{flex:1;min-width:0;font-weight:600;font-size:15px;color:#E4EAFF}
+  .caret{display:inline-block;width:2px;height:1.1em;vertical-align:-3px;background:var(--gold);margin-left:2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .send{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(120deg,var(--gold2),var(--gold));color:var(--gold-ink)}
+  .trace{display:flex;flex-wrap:wrap;gap:6px 12px;min-height:22px;margin:12px 2px 0;font:500 11.5px/1.6 var(--f-mono);color:var(--muted2)}
+  .trace span{display:inline-flex;align-items:center;gap:5px;transition:opacity .3s,color .3s}
+  .trace span::before{content:"";width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite}
+  .trace span.done{color:var(--muted)}
+  .trace span.done::before{border:0;width:auto;height:auto;content:"✓";color:var(--green);animation:none;font-size:11px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ans{margin-top:10px;border:1px solid var(--line);border-radius:18px;padding:16px;background:var(--surface2)}
+  .ans [data-step]{transition:opacity .5s var(--ease-out),transform .6s var(--ease-out),filter .5s}
+  .ans.out [data-step]{opacity:.16;transform:translateY(4px);filter:blur(4px)}
+  .method{display:inline-flex;align-items:center;gap:8px;font:700 12px/1 var(--f-mono);color:var(--gold);letter-spacing:.02em}
+  .method::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--gold);box-shadow:0 0 10px rgba(230,184,96,.7)}
+  .read{font-size:16px;font-weight:600;line-height:1.45;margin-top:11px;min-height:2.9em}
+  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:rgba(255,255,255,.025)}
+  .tile .k{font-size:10.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .v{font:600 18px/1.25 var(--f-mono);margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .v.up{color:var(--green)} .v.dn{color:var(--red)}
+  .spark-wrap{position:relative;margin-top:12px}
+  .spark{display:block;width:100%;height:58px;overflow:visible}
+  .snap-in .spark{margin-top:12px}
+  .spark.draw{animation:draw 1.2s var(--ease-out) both}
+  @keyframes draw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  .spark-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--dot,#34D399);box-shadow:0 0 0 4px color-mix(in srgb,var(--dot,#34D399) 25%,transparent),0 0 14px var(--dot,#34D399);transition:opacity .3s}
+  .spark-dot.wait{opacity:0}
+  .verdict-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin-top:12px;font-size:13.5px;color:var(--muted);font-weight:500}
+  .badges{display:flex;gap:6px;flex-wrap:wrap}
+  .badge{font:700 11px/1 var(--f-mono);letter-spacing:.04em;padding:6px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
+  .badge.gold{color:var(--gold);background:rgba(230,184,96,.13);border-color:rgba(230,184,96,.38)}
+  .badge.green{color:var(--green);background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.36)}
+  .badge.azure{color:var(--azure);background:rgba(134,169,255,.12);border-color:rgba(134,169,255,.36)}
+  .badge.amber{color:var(--amber);background:rgba(255,180,84,.12);border-color:rgba(255,180,84,.36)}
+  .badge.red{color:var(--red);background:rgba(255,122,122,.12);border-color:rgba(255,122,122,.36)}
+  .badge.stamp{animation:stamp .55s var(--ease-spring) both}
+  @keyframes stamp{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+  .asof{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line2);font:500 11px/1.5 var(--f-mono);color:var(--muted2)}
+  .stage-cap{font-size:12px;color:var(--muted2);text-align:center;margin-top:14px;font-weight:500}
+
+  /* ===== Bird ===== */
+  .bird-svg{display:block;width:100%;height:auto;overflow:visible}
+  .bird-svg .bird{transform-box:fill-box;transform-origin:center bottom;animation:bob 3.6s ease-in-out infinite}
+  .bird-svg .wing{transform-box:fill-box;transform-origin:90% 10%;animation:flap 2.2s ease-in-out infinite}
+  .bird-svg .wing-back{transform-box:fill-box;transform-origin:0% 0%;animation:flapBack 2.2s ease-in-out infinite}
+  .bird-svg .tuft{transform-box:fill-box;transform-origin:bottom center;animation:sway 4s ease-in-out infinite}
+  .bird-svg .lid{transform-box:fill-box;transform-origin:top;transform:scaleY(0);animation:lid 5.2s ease-in-out infinite}
+  .bird-svg .shadow{transform-box:fill-box;transform-origin:center;animation:shadow 3.6s ease-in-out infinite}
+  .bird-svg .pupils{transition:transform .25s ease-out}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  @keyframes flap{0%,100%{transform:rotate(0)}50%{transform:rotate(-22deg)}}
+  @keyframes flapBack{0%,100%{transform:rotate(0)}50%{transform:rotate(16deg)}}
+  @keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+  @keyframes lid{0%,92%,100%{transform:scaleY(0)}95%{transform:scaleY(1)}}
+  @keyframes shadow{0%,100%{transform:scaleX(1);opacity:.3}50%{transform:scaleX(.84);opacity:.18}}
+  .bird-svg.hop .bird{animation:hop .6s var(--ease-spring)}
+  @keyframes hop{0%{transform:translateY(0)}35%{transform:translateY(-16px) rotate(-4deg)}100%{transform:translateY(0)}}
+  .bird-svg.celebrate .wing{animation-duration:.35s}
+  .bird-svg.celebrate .wing-back{animation-duration:.35s}
+  .bird-svg.celebrate .bird{animation:bob .7s ease-in-out infinite}
+
+  /* ===== Marquee ===== */
+  .marquee-sec{padding-block:88px 96px;border-block:1px solid var(--line);background:linear-gradient(180deg,var(--bg2),var(--bg))}
+  .marquee-head{display:flex;align-items:end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .marquee-head .sec-sub{margin-top:0;max-width:26em}
+  .marquees{display:grid;gap:14px;margin-top:48px}
+  .marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .track{display:flex;gap:12px;width:max-content;animation:scroll var(--speed,48s) linear infinite}
+  .marquee.rev .track{animation-direction:reverse}
+  .marquee:hover .track{animation-play-state:paused}
+  @keyframes scroll{to{transform:translateX(calc(-50% - 6px))}}
+  .vchip{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:10px 16px 10px 10px;white-space:nowrap;transition:border-color .25s,transform .25s var(--ease-out)}
+  .vchip:hover{border-color:var(--line2);transform:translateY(-2px)}
+  .vchip .av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font:700 12px var(--f-mono);background:rgba(230,184,96,.1);color:var(--gold);border:1px solid rgba(230,184,96,.24)}
+  .vchip .av.tok{border-radius:50%;background:rgba(134,169,255,.1);color:var(--azure);border-color:rgba(134,169,255,.28)}
+  .vchip b{display:block;font-size:15px;font-weight:700;line-height:1.2}
+  .vchip small{font-size:11.5px;color:var(--muted2);font-weight:600}
+  .vchip .vp{font:600 12px var(--f-mono);margin-left:6px}
+  .vp.gold{color:var(--gold)} .vp.green{color:var(--green)} .vp.azure{color:var(--azure)} .vp.amber{color:var(--amber)} .vp.red{color:var(--red)}
+
+  /* ===== Depths (sticky scroll) ===== */
+  .depths{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px;margin-top:20px}
+  .steps{display:flex;flex-direction:column}
+  .step{min-height:68vh;display:flex;flex-direction:column;justify-content:center;padding-block:40px;transition:opacity .5s}
+  .js .step:not(.on){opacity:.38}
+  .step .dlabel{font:700 12px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+  .step h3{font-size:clamp(28px,3.2vw,40px);line-height:1.08;font-weight:800;margin-top:14px}
+  .step p{color:var(--muted);font-size:17px;line-height:1.6;margin-top:14px;max-width:26em;font-weight:500}
+  .stage-col{position:relative}
+  .ds{position:sticky;top:calc(env(safe-area-inset-top,0px) + 92px);border:1px solid var(--line2);border-radius:26px;background:linear-gradient(180deg,#10131B,#0A0C11);padding:18px;box-shadow:0 50px 100px -50px rgba(0,0,0,.9)}
+  .ds-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .ds-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px}
+  .ds-tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02)}
+  .ds-tabs button{border:0;background:transparent;font:600 11.5px/1 var(--f-mono);color:var(--muted2);padding:7px 10px;border-radius:999px;cursor:pointer;transition:all .3s var(--ease-out)}
+  .ds-tabs button[aria-selected="true"]{background:rgba(230,184,96,.14);color:var(--gold)}
+  .ds-list{display:flex;flex-direction:column}
+  .collapse{display:grid;grid-template-rows:1fr;transition:grid-template-rows .7s var(--ease-out),opacity .5s,margin .7s var(--ease-out)}
+  .collapse>div{overflow:hidden;min-height:0}
+  .ds-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 13px;margin-bottom:9px;transition:border-color .5s,background .5s}
+  .ds-row .tk{display:flex;align-items:center;gap:11px;min-width:0}
+  .ds-row .av{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:700 12px var(--f-mono);background:rgba(230,184,96,.1);color:var(--gold);border:1px solid rgba(230,184,96,.24)}
+  .ds-row .av.tok{border-radius:50%;background:rgba(134,169,255,.1);color:var(--azure);border-color:rgba(134,169,255,.28)}
+  .ds-row b{display:block;font-size:15px;font-weight:700}
+  .ds-row .ph{font-size:12px;font-weight:600;color:var(--muted)}
+  .ds-row .rt{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+  .ds-row .rt div:first-child{font-size:14.5px;font-weight:600}
+  .ds-row .rt div:last-child{font-size:11.5px}
+  .up{color:var(--green)} .dn{color:var(--red)}
+  .ds-focus{border:1px solid transparent;border-radius:16px;margin-bottom:9px;transition:border-color .6s,background .6s,padding .6s var(--ease-out)}
+  .ds-focus .ds-row{margin-bottom:0}
+  .ds-focus .ph{color:var(--gold);position:relative}
+  .ds[data-depth="1"] .ds-focus .ds-row{border-color:rgba(230,184,96,.5);box-shadow:0 0 0 4px rgba(230,184,96,.08)}
+  .ds[data-depth="1"] .ds-focus .ph{animation:glowtxt 2.4s ease-in-out infinite}
+  @keyframes glowtxt{50%{text-shadow:0 0 14px rgba(230,184,96,.8)}}
+  .ds:not([data-depth="1"]) .ds-focus{border-color:rgba(230,184,96,.35);background:rgba(230,184,96,.035);padding:8px}
+  .ds:not([data-depth="1"]) .ds-focus .ds-row{border-color:transparent;background:transparent}
+  .ds:not([data-depth="1"]) .other.collapse{opacity:.4}
+  .ds[data-depth="3"] .other.collapse{grid-template-rows:0fr;opacity:0}
+  .ds .snap.collapse,.ds .reason.collapse{grid-template-rows:0fr;opacity:0}
+  .ds:not([data-depth="1"]) .snap.collapse{grid-template-rows:1fr;opacity:1}
+  .ds[data-depth="3"] .reason.collapse{grid-template-rows:1fr;opacity:1}
+  .snap-in{padding:6px 5px 4px}
+  .snap-in .read{font-size:15px;min-height:0;margin-top:4px}
+  .reason-in{padding:4px 5px 4px}
+  .rz{border-top:1px dashed var(--line2);margin-top:14px;padding-top:12px}
+  .rz h4{font:700 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:9px}
+  .src-list{list-style:none;display:grid;gap:6px}
+  .src-list li{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:500;color:var(--muted)}
+  .src-list li span:last-child{font:500 11.5px var(--f-mono);color:var(--muted2);white-space:nowrap}
+  .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
+  .kv div{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-weight:500}
+  .kv b{font:600 13px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+  .kv .total{grid-column:1/-1;border-top:1px solid var(--line);padding-top:7px;margin-top:2px;color:var(--ink);font-weight:700}
+  .kv .total b{color:var(--gold)}
+  .change{font-size:13.5px;color:var(--muted);font-weight:500;line-height:1.5}
+  .change em{font-style:normal;color:var(--ink);font-weight:700}
+
+  /* ===== Briefs ===== */
+  .brief-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:72px;align-items:center}
+  .channels{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+  .channels span{font:600 12px var(--f-mono);color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:7px 12px}
+  .phone{width:100%;max-width:360px;margin:0 auto;border-radius:48px;padding:11px;background:linear-gradient(160deg,#1A1C22,#0A0B0F);box-shadow:0 50px 100px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06),inset 0 0 0 1px rgba(255,255,255,.04)}
+  .lock{position:relative;border-radius:38px;overflow:hidden;min-height:600px;padding:56px 16px 22px;background:radial-gradient(120% 70% at 20% 0%,rgba(230,184,96,.35),transparent 60%),radial-gradient(90% 60% at 100% 30%,rgba(110,155,255,.22),transparent 60%),linear-gradient(180deg,#14161D,#08090C)}
+  .lock .island{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:96px;height:26px;border-radius:20px;background:#000}
+  .lock-date{text-align:center;font-weight:600;font-size:16px;color:rgba(255,255,255,.75)}
+  .lock-time{text-align:center;font-weight:700;font-size:84px;line-height:1;letter-spacing:-.04em;margin-top:2px;color:rgba(255,255,255,.92);font-variant-numeric:tabular-nums}
+  .notes{list-style:none;display:grid;gap:9px;margin-top:34px}
+  .note{display:flex;gap:11px;padding:12px 13px;border-radius:20px;background:rgba(30,33,42,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.07)}
+  .note .ic{flex:none;width:36px;height:36px;border-radius:10px;background:linear-gradient(140deg,var(--gold2),#C98B2E);display:grid;place-items:center}
+  .note .bd{min-width:0;flex:1}
+  .note .top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:rgba(255,255,255,.55);font-weight:600}
+  .note b{display:block;font-size:14px;font-weight:700;line-height:1.3;margin-top:1px}
+  .note p{font-size:13px;color:rgba(255,255,255,.72);line-height:1.4;font-weight:500}
+  .js .notes:not(.play) .note{opacity:0;transform:translateY(-18px) scale(.96)}
+  .notes.play .note{animation:noteIn .8s var(--ease-spring) both;animation-delay:calc(var(--i) * 650ms + 200ms)}
+  @keyframes noteIn{from{opacity:0;transform:translateY(-18px) scale(.96)}}
+
+  /* ===== Decoded ===== */
+  .dec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:52px}
+  .dcard{border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,var(--surface),var(--bg2));padding:24px;display:flex;flex-direction:column;gap:16px}
+  .dhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .dhead b{font-size:17px;font-weight:800}
+  .pages{font:600 12px var(--f-mono);color:var(--muted2)}
+  .pages .n{color:var(--gold);font-variant-numeric:tabular-nums}
+  .bul{list-style:none;display:grid;gap:11px}
+  .bul li{display:flex;gap:11px;font-size:15px;font-weight:500;line-height:1.5}
+  .bul li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:8px;box-shadow:0 0 8px rgba(230,184,96,.6)}
+  .bul em{font-style:normal;font-weight:700;background:linear-gradient(transparent 62%,rgba(230,184,96,.3) 62%);background-repeat:no-repeat;background-size:100% 100%;transition:background-size 1s var(--ease-out)}
+  .js .dcard:not(.in) .bul em{background-size:0% 100%}
+  .risk{display:flex;flex-wrap:wrap;gap:6px}
+  .risk span{font:600 11px var(--f-mono);border:1px solid var(--line2);border-radius:999px;padding:6px 10px;color:var(--muted);transition:opacity .4s,transform .5s var(--ease-spring)}
+  .risk span.warn{color:var(--amber);border-color:rgba(255,180,84,.35)}
+  .js .dcard:not(.in) .risk span{opacity:0;transform:scale(.8)}
+  .dcard .risk span:nth-child(2){transition-delay:.12s}.dcard .risk span:nth-child(3){transition-delay:.24s}
+  .pread{border-top:1px solid var(--line);padding-top:14px;font-size:14.5px;color:var(--muted);font-weight:500;line-height:1.55}
+  .pread b{display:block;color:var(--ink);font-size:12px;font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+
+  /* ===== Trust ===== */
+  .rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:52px;border-top:1px solid var(--line)}
+  .rulei{padding:28px 24px 8px 0;border-right:1px solid var(--line);margin-right:24px}
+  .rulei:last-child{border-right:0;margin-right:0}
+  .rulei svg{color:var(--gold)}
+  .rulei h3{font-size:19px;font-weight:700;letter-spacing:-.01em;margin-top:18px;line-height:1.25}
+  .rulei p{color:var(--muted);font-size:14.5px;line-height:1.55;margin-top:8px;font-weight:500}
+  .sources{display:flex;flex-wrap:wrap;gap:10px;margin-top:48px;align-items:center}
+  .sources .lbl{font:700 11.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin-right:6px}
+  .sources span.s{font-size:14px;font-weight:700;border:1px solid var(--line);border-radius:12px;padding:9px 14px;background:var(--surface)}
+  .sources span.s small{font:500 11px var(--f-mono);color:var(--muted2);margin-left:6px}
+
+  /* ===== CTA ===== */
+  .cta{position:relative;text-align:center;padding-block:120px 110px;overflow:hidden;isolation:isolate}
+  .cta::before{content:"";position:absolute;left:50%;top:40px;width:760px;height:560px;max-width:120%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(230,184,96,.18),transparent);z-index:-1}
+  .cta .bird-wrap{width:150px;margin:0 auto}
+  .cta h2{font-size:clamp(40px,6vw,72px);line-height:1;font-weight:800;margin-top:26px}
+  .cta .sec-sub{margin-inline:auto}
+  .cta .wl{margin-inline:auto;text-align:left;animation:none}
+  .quote{max-width:780px;margin:0 auto 84px;font-size:clamp(22px,2.8vw,30px);line-height:1.35;font-weight:700;letter-spacing:-.015em;color:var(--muted)}
+  .quote span{color:var(--ink)}
+
+  .site-foot{border-top:1px solid var(--line);background:var(--bg2);padding-block:56px 36px}
+  .foot{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}
+  .foot p{color:var(--muted);font-size:14px;max-width:300px;margin-top:12px;font-weight:500}
+  .flinks{display:flex;gap:40px;flex-wrap:wrap}
+  .flinks div{display:flex;flex-direction:column;gap:10px;font-size:14.5px;color:var(--muted);font-weight:500}
+  .flinks h4{font:700 11.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px}
+  .flinks a:hover{color:var(--ink)}
+  .fbot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid var(--line);font:500 12.5px var(--f-mono);color:var(--muted2)}
+
+  /* ===== Reveal ===== */
+  .js [data-reveal]{transition:opacity .9s var(--ease-out),transform 1s var(--ease-out)}
+  .js [data-reveal]:not(.in){opacity:0;transform:translateY(26px)}
+
+  /* concept switcher — remove when promoting */
+  .cswitch{position:fixed;left:max(14px, env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;background:rgba(20,22,28,.88);border:1px solid var(--line2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:600 11.5px var(--f-mono)}
+  .cswitch a{padding:7px 10px;border-radius:999px;color:var(--muted)}
+  .cswitch a[aria-current]{background:var(--gold);color:var(--gold-ink)}
+  .cswitch a:hover:not([aria-current]){color:var(--ink)}
+
+  @media (max-width:980px){
+    .hero-grid,.brief-grid{grid-template-columns:minmax(0,1fr);gap:48px}
+    .depths{grid-template-columns:minmax(0,1fr);gap:28px}
+    .stage-col{order:-1}
+    .ds{position:relative;top:0}
+    .step{min-height:0;opacity:1;padding-block:18px}
+    .rules{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .rulei:nth-child(2){border-right:0;margin-right:0}
+    .nav-links{display:none}
+  }
+  @media (max-width:640px){
+    .sec{padding-block:80px}
+    .hero{padding-block:48px 72px}
+    .dec-grid,.rules{grid-template-columns:minmax(0,1fr)}
+    .rulei{border-right:0;margin-right:0;border-bottom:1px solid var(--line);padding-bottom:24px}
+    .tiles{gap:6px}
+    .tile{padding:9px}
+    .tile .v{font-size:15.5px}
+    .perch{width:76px;right:18px}
+    .stage{padding-top:52px}
+    .ask-tabs{padding-right:72px}
+    .hero-proof{gap:22px}
+    .kv{grid-template-columns:minmax(0,1fr)}
+    .lock{min-height:540px}
+    .lock-time{font-size:72px}
+    .nav .handle{display:none}
+    .cswitch{font-size:10.5px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    .js [data-reveal]:not(.in),.js .notes:not(.play) .note,.js .dcard:not(.in) .risk span{opacity:1;transform:none}
+    .js .dcard:not(.in) .bul em{background-size:100% 100%}
+    .gold-grad{animation:none;background-position:50% 0}
+    .track{animation:none!important;width:auto;flex-wrap:wrap;justify-content:center;padding-inline:20px}
+    .marquee{mask-image:none;-webkit-mask-image:none}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#F3D08A"/><stop offset="1" stop-color="#E6B860"/></linearGradient>
+    <symbol id="logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="url(#pg)"/><path d="M10 23V9.5h6.4c2.9 0 4.8 1.7 4.8 4.3 0 2.6-1.9 4.3-4.8 4.3H13V23h-3Zm3-7.4h2.9c1.3 0 2.1-.7 2.1-1.8s-.8-1.8-2.1-1.8H13v3.6Z" fill="#1A1404"/></symbol>
+    <symbol id="bird-mini" viewBox="0 0 220 220"><ellipse cx="110" cy="124" rx="62" ry="58" fill="#E6B860"/><circle cx="92" cy="108" r="13" fill="#fff"/><circle cx="128" cy="108" r="13" fill="#fff"/><circle cx="95" cy="110" r="6" fill="#241803"/><circle cx="131" cy="110" r="6" fill="#241803"/><path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/></symbol>
+    <linearGradient id="vb-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3D08A"/><stop offset="1" stop-color="#E0A93F"/></linearGradient>
+    <linearGradient id="vb-belly" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBEFD2"/><stop offset="1" stop-color="#F4D89A"/></linearGradient>
+    <radialGradient id="vb-halo" cx="50%" cy="45%" r="55%"><stop offset="0" stop-color="#E6B860" stop-opacity=".40"/><stop offset="1" stop-color="#E6B860" stop-opacity="0"/></radialGradient>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><svg width="30" height="30"><use href="#logo"/></svg>Petyr</a>
+    <div class="nav-links"><a href="#how">How it works</a><a href="#tokens">Tokens</a><a href="#briefs">Briefs</a><a href="#trust">Trust</a></div>
+    <a class="btn btn-gold" href="#join">Join the waitlist</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <a class="pill" href="#join"><span class="live"></span>Waitlist open · research preview next</a>
+      <h1 class="hero-h"><span class="line"><span class="w" style="--i:0">Know</span> <span class="w gold-grad" style="--i:1">before</span></span><span class="line"><span class="w" style="--i:2">you</span> <span class="w" style="--i:3">invest.</span></span></h1>
+      <p class="hero-sub">Petyr is an AI research companion for stocks and the tokenized assets moving on-chain. It reads the filing or the attestation, runs the numbers, and tells you what it found in plain English, before you buy.</p>
+
+      <form class="wl" id="waitlist-form" data-source="verdict-hero" autocomplete="on">
+        <div class="wl-row">
+          <label class="sr" for="wl-email">Email address</label>
+          <input type="email" name="email" id="wl-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+          <button class="btn btn-gold" type="submit" id="wl-submit">Join the waitlist</button>
+        </div>
+        <div class="wl-extra"><div>
+          <p class="wl-q" id="wl-q-int">Optional: what should Petyr watch for you?</p>
+          <div class="chips" role="group" aria-labelledby="wl-q-int">
+            <label class="chip"><input type="checkbox" name="interest" value="stocks" id="h-i-stocks"><span>Stocks</span></label>
+            <label class="chip"><input type="checkbox" name="interest" value="tokenized-stocks" id="h-i-tstocks"><span>Tokenized stocks</span></label>
+            <label class="chip"><input type="checkbox" name="interest" value="treasuries" id="h-i-treas"><span>Tokenized treasuries</span></label>
+            <label class="chip"><input type="checkbox" name="interest" value="gold" id="h-i-gold"><span>Gold tokens</span></label>
+            <label class="chip"><input type="checkbox" name="interest" value="real-estate" id="h-i-re"><span>Real estate</span></label>
+            <label class="chip"><input type="checkbox" name="interest" value="crypto" id="h-i-crypto"><span>Crypto majors</span></label>
+          </div>
+        </div></div>
+        <div class="wl-msg" id="wl-msg" role="status"></div>
+        <p class="wl-note">One email when the app lands. Beta invites go to the waitlist first.</p>
+      </form>
+
+      <ul class="hero-proof">
+        <li><b data-count="23">23</b>analysis skills</li>
+        <li><b data-count="19">19</b>data tools</li>
+        <li><b data-count="6">6</b>asset classes</li>
+        <li><b>0</b>jargon</li>
+      </ul>
+    </div>
+
+    <div class="stage" id="ask-stage">
+      <div class="perch" aria-hidden="true">
+        <svg class="bird-svg" id="hero-bird" viewBox="0 0 220 220">
+          <circle cx="110" cy="110" r="104" fill="url(#vb-halo)"/>
+          <g class="bird">
+            <path d="M150 120 q40 6 52 26 q-26 4 -44 -6 z" fill="#C98B2E"/>
+            <g stroke="#B8801F" stroke-width="5" stroke-linecap="round"><path d="M96 178 v14"/><path d="M124 178 v14"/></g>
+            <ellipse cx="110" cy="124" rx="62" ry="58" fill="url(#vb-body)"/>
+            <ellipse cx="104" cy="134" rx="40" ry="40" fill="url(#vb-belly)"/>
+            <path class="wing-back" d="M160 110 q34 14 30 44 q-26 -4 -38 -26 z" fill="#D69B33"/>
+            <g class="tuft" fill="#E6B860"><path d="M96 64 q-6 -22 6 -34 q8 14 4 30 z"/><path d="M112 60 q2 -24 16 -30 q0 16 -8 30 z"/></g>
+            <circle cx="92" cy="108" r="15" fill="#fff"/><circle cx="128" cy="108" r="15" fill="#fff"/>
+            <g class="pupils"><circle cx="93" cy="110" r="7" fill="#241803"/><circle cx="129" cy="110" r="7" fill="#241803"/><circle cx="96" cy="107" r="2.4" fill="#fff"/><circle cx="132" cy="107" r="2.4" fill="#fff"/></g>
+            <rect class="lid" x="76" y="92" width="32" height="32" rx="16" fill="url(#vb-body)"/>
+            <rect class="lid" x="112" y="92" width="32" height="32" rx="16" fill="url(#vb-body)"/>
+            <path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/>
+            <ellipse cx="74" cy="128" rx="8" ry="5" fill="#F0A65A" opacity=".55"/><ellipse cx="146" cy="128" rx="8" ry="5" fill="#F0A65A" opacity=".55"/>
+            <g class="wing"><path d="M58 116 q-34 8 -40 36 q28 4 44 -14 q6 -12 -4 -22 z" fill="#E0A93F"/><path d="M58 116 q-26 8 -32 28" fill="none" stroke="#C98B2E" stroke-width="3" stroke-linecap="round"/></g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="ask" id="ask">
+        <div class="ask-tabs" role="tablist" aria-label="Example questions">
+          <button class="ask-tab" role="tab" aria-selected="true" data-i="0">Stock<span class="prog"></span></button>
+          <button class="ask-tab" role="tab" aria-selected="false" data-i="1">Treasury token<span class="prog"></span></button>
+          <button class="ask-tab" role="tab" aria-selected="false" data-i="2">Gold token<span class="prog"></span></button>
+          <button class="ask-tab" role="tab" aria-selected="false" data-i="3">Stock token<span class="prog"></span></button>
+        </div>
+        <div class="ask-q">
+          <span class="qt"><span id="ask-q">Is NVDA overvalued at these levels?</span><span class="caret" aria-hidden="true"></span></span>
+          <span class="send" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+        </div>
+        <div class="trace" id="ask-trace" aria-hidden="true"><span class="done">financial_search</span><span class="done">read_filings</span><span class="done">skill · dcf</span></div>
+        <div class="ans" id="ask-ans">
+          <p class="sr" id="ask-live" aria-live="polite"></p>
+          <div class="method" data-step id="ask-method">Petyr · DCF + multiples</div>
+          <p class="read" data-step id="ask-read">Priced for near-perfection, but the growth still backs it.</p>
+          <div class="tiles" data-step id="ask-tiles">
+            <div class="tile"><div class="k">Fwd P/E</div><div class="v">31.4×</div></div>
+            <div class="tile"><div class="k">Rev growth</div><div class="v up">+94%</div></div>
+            <div class="tile"><div class="k">Fair value</div><div class="v">$142</div></div>
+          </div>
+          <div class="spark-wrap" data-step>
+          <svg class="spark" id="ask-spark" viewBox="0 0 320 58" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34D399" stop-opacity=".28"/><stop offset="1" stop-color="#34D399" stop-opacity="0"/></linearGradient></defs>
+            <path class="area" fill="url(#spark-fill)" d="M0,48 L40,44 L80,40 L120,41 L160,30 L200,25 L240,17 L280,13 L320,8 L320,58 L0,58 Z"/>
+            <path class="line2" fill="none" stroke="#86A9FF" stroke-width="1.6" stroke-dasharray="3 3" d=""/>
+            <path class="line" fill="none" stroke="#34D399" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" d="M0,48 L40,44 L80,40 L120,41 L160,30 L200,25 L240,17 L280,13 L320,8"/>
+          </svg>
+          <span class="spark-dot" id="ask-dot" style="left:100%;top:13.8%"></span>
+          </div>
+          <div class="verdict-row" data-step>
+            <div class="badges" id="ask-badges"><span class="badge gold">FAIRLY VALUED</span></div>
+            <span id="ask-note">Trading ~8% above my base-case DCF.</span>
+          </div>
+          <div class="asof" data-step id="ask-asof">basis: base-case DCF · confidence: medium · as of today, 9:14 ET</div>
+        </div>
+      </div>
+      <p class="stage-cap">Illustrative preview. Numbers are examples, not live data.</p>
+    </div>
+  </div>
+</header>
+
+<section class="marquee-sec" id="tokens" aria-labelledby="mq-h">
+  <div class="wrap marquee-head">
+    <div>
+      <span class="eyebrow">Every holding, a verdict</span>
+      <h2 class="sec-h" id="mq-h">Stocks and tokens,<br><span class="lt">read the same way.</span></h2>
+    </div>
+    <p class="sec-sub">Tokenized treasuries, gold, stock tokens and the shares underneath them. Each one gets the same plain-English read, with who can hold it and what backs it.</p>
+  </div>
+  <div class="marquees" aria-label="Example verdicts">
+    <div class="marquee"><div class="track" style="--speed:56s">
+      <div class="vchip"><span class="av">NV</span><div><b>NVDA <span class="vp gold">Fairly valued</span></b><small>Stock · DCF + multiples</small></div></div>
+      <div class="vchip"><span class="av tok">PX</span><div><b>PAXG <span class="vp green">Backing verified</span></b><small>Gold token · 1 token = 1 oz</small></div></div>
+      <div class="vchip"><span class="av">AA</span><div><b>AAPL <span class="vp green">Quality hold</span></b><small>Stock · ROIC + quality</small></div></div>
+      <div class="vchip"><span class="av tok">US</span><div><b>USDY <span class="vp azure">Yield-bearing · non-US</span></b><small>Treasury token · eligibility</small></div></div>
+      <div class="vchip"><span class="av">TS</span><div><b>TSLA <span class="vp amber">Priced for perfection</span></b><small>Stock · DCF scenarios</small></div></div>
+      <div class="vchip"><span class="av">KO</span><div><b>KO <span class="vp green">Undervalued · defensive</span></b><small>Stock · dividend model</small></div></div>
+    </div></div>
+    <div class="marquee rev"><div class="track" style="--speed:62s">
+      <div class="vchip"><span class="av tok">xN</span><div><b>xNVDA <span class="vp amber">Trades at a premium</span></b><small>Stock token · vs NVDA</small></div></div>
+      <div class="vchip"><span class="av tok">BU</span><div><b>BUIDL <span class="vp azure">Qualified investors only</span></b><small>Treasury fund · eligibility</small></div></div>
+      <div class="vchip"><span class="av">MS</span><div><b>MSFT <span class="vp green">Quality hold</span></b><small>Stock · DuPont</small></div></div>
+      <div class="vchip"><span class="av tok">VL</span><div><b>VLLA <span class="vp red">Backing unverified</span></b><small>Example real-estate token · no attestation</small></div></div>
+      <div class="vchip"><span class="av tok">BJ</span><div><b>BENJI <span class="vp green">Backing verified</span></b><small>Money-market token · reserves</small></div></div>
+      <div class="vchip"><span class="av">JP</span><div><b>JPM <span class="vp gold">Fairly valued</span></b><small>Bank · residual income</small></div></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="sec" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <span class="eyebrow">How it works</span>
+    <h2 class="sec-h" id="how-h">Short answer first.<br><span class="lt">The full work one tap away.</span></h2>
+    <div class="depths">
+      <div class="steps" id="steps">
+        <div class="step on" data-depth="1">
+          <span class="dlabel">Depth 1 · Verdict</span>
+          <h3>A few words on every row.</h3>
+          <p>Every stock and token on your watchlist carries Petyr's read: fairly valued, quality hold, backing verified. Glance at it and get on with your day.</p>
+        </div>
+        <div class="step" data-depth="2">
+          <span class="dlabel">Depth 2 · Snapshot</span>
+          <h3>Tap for the card.</h3>
+          <p>Three numbers, a price line, and one sentence on why. Enough to understand the call in ten seconds.</p>
+        </div>
+        <div class="step" data-depth="3">
+          <span class="dlabel">Depth 3 · Full reasoning</span>
+          <h3>Tap again for the work.</h3>
+          <p>Every source and timestamp, the model's assumptions, and what would change the read. Nothing is hidden behind the verdict.</p>
+        </div>
+      </div>
+      <div class="stage-col">
+        <div class="ds" id="ds" data-depth="1">
+          <div class="ds-head">
+            <span class="ds-title"><svg width="22" height="22"><use href="#bird-mini"/></svg>Watchlist</span>
+            <div class="ds-tabs" role="tablist" aria-label="Depth">
+              <button role="tab" data-go="1" aria-selected="true">Verdict</button>
+              <button role="tab" data-go="2" aria-selected="false">Snapshot</button>
+              <button role="tab" data-go="3" aria-selected="false">Reasoning</button>
+            </div>
+          </div>
+          <div class="ds-list">
+            <div class="other collapse"><div><div class="ds-row"><div class="tk"><span class="av">AA</span><div><b>AAPL</b><span class="ph">Quality hold</span></div></div><div class="rt"><div>$228.00</div><div class="up">+0.6%</div></div></div></div></div>
+            <div class="ds-focus">
+              <div class="ds-row"><div class="tk"><span class="av">NV</span><div><b>NVDA</b><span class="ph">Fairly valued</span></div></div><div class="rt"><div>$153.20</div><div class="up">+2.3%</div></div></div>
+              <div class="snap collapse"><div><div class="snap-in">
+                <div class="method">Petyr · DCF + multiples</div>
+                <p class="read">Priced for near-perfection, but the growth still backs it.</p>
+                <div class="tiles">
+                  <div class="tile"><div class="k">Fwd P/E</div><div class="v">31.4×</div></div>
+                  <div class="tile"><div class="k">Rev growth</div><div class="v up">+94%</div></div>
+                  <div class="tile"><div class="k">Fair value</div><div class="v">$142</div></div>
+                </div>
+                <svg class="spark" viewBox="0 0 320 58" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="ds-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34D399" stop-opacity=".28"/><stop offset="1" stop-color="#34D399" stop-opacity="0"/></linearGradient></defs><path fill="url(#ds-fill)" d="M0,48 L40,44 L80,40 L120,41 L160,30 L200,25 L240,17 L280,13 L320,8 L320,58 L0,58 Z"/><path fill="none" stroke="#34D399" stroke-width="2.2" vector-effect="non-scaling-stroke" d="M0,48 L40,44 L80,40 L120,41 L160,30 L200,25 L240,17 L280,13 L320,8"/></svg>
+                <div class="verdict-row"><span class="badge gold">FAIRLY VALUED</span><span>~8% above my base-case DCF.</span></div>
+              </div></div></div>
+              <div class="reason collapse"><div><div class="reason-in">
+                <div class="rz"><h4>What I checked</h4>
+                  <ul class="src-list">
+                    <li><span>10-Q, data-center segment</span><span>SEC EDGAR · Aug 27</span></li>
+                    <li><span>Consensus revenue estimates</span><span>Financial Datasets</span></li>
+                    <li><span>10-year Treasury yield, 4.18%</span><span>FRED · today</span></li>
+                  </ul>
+                </div>
+                <div class="rz"><h4>Base-case DCF</h4>
+                  <div class="kv">
+                    <div>Revenue growth, 5y <b>28%/yr</b></div>
+                    <div>Operating margin <b>58%</b></div>
+                    <div>Discount rate <b>9.1%</b></div>
+                    <div>Terminal growth <b>3.0%</b></div>
+                    <div class="total">Fair value per share <b>$142</b></div>
+                  </div>
+                </div>
+                <div class="rz"><h4>What would change my read</h4>
+                  <p class="change">Data-center growth under <em>25% for two quarters</em>, or margins slipping below <em>50%</em>.</p>
+                </div>
+              </div></div></div>
+            </div>
+            <div class="other collapse"><div><div class="ds-row"><div class="tk"><span class="av tok">PX</span><div><b>PAXG</b><span class="ph">Backing verified</span></div></div><div class="rt"><div>$4,126.50</div><div class="up">+0.4%</div></div></div></div></div>
+            <div class="other collapse"><div><div class="ds-row"><div class="tk"><span class="av tok">US</span><div><b>USDY</b><span class="ph">Yield-bearing · non-US</span></div></div><div class="rt"><div>$1.1184</div><div class="up">+0.01%</div></div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="rule"></div></div>
+
+<section class="sec" id="briefs" aria-labelledby="br-h">
+  <div class="wrap brief-grid">
+    <div data-reveal>
+      <span class="eyebrow">Briefs &amp; alerts</span>
+      <h2 class="sec-h" id="br-h">Petyr works<br><span class="lt">while you sleep.</span></h2>
+      <p class="sec-sub">Each morning you get a short brief on what changed in your holdings overnight: earnings tomorrow, a new filing, a fresh attestation on a token you own, a verdict that moved. Three bullets instead of thirty tabs.</p>
+      <div class="channels"><span>Push</span><span>WhatsApp</span><span>In-app feed</span></div>
+    </div>
+    <div class="phone" data-reveal>
+      <div class="lock">
+        <span class="island"></span>
+        <div class="lock-date">Tuesday, October 27</div>
+        <div class="lock-time">7:02</div>
+        <ul class="notes" id="notes">
+          <li class="note" style="--i:0"><span class="ic"><svg width="24" height="24"><use href="#bird-mini"/></svg></span><div class="bd"><div class="top"><span>Petyr · Morning brief</span><span>7:00</span></div><b>3 things changed in your watchlist overnight</b><p>One earnings date, one filing, one verdict.</p></div></li>
+          <li class="note" style="--i:1"><span class="ic"><svg width="24" height="24"><use href="#bird-mini"/></svg></span><div class="bd"><div class="top"><span>Petyr</span><span>7:00</span></div><b>TSLA reports tomorrow</b><p>Here's what matters, in three bullets.</p></div></li>
+          <li class="note" style="--i:2"><span class="ic"><svg width="24" height="24"><use href="#bird-mini"/></svg></span><div class="bd"><div class="top"><span>Petyr</span><span>6:41</span></div><b>New attestation for USDY, decoded</b><p>Reserves still cover every token in circulation.</p></div></li>
+          <li class="note" style="--i:3"><span class="ic"><svg width="24" height="24"><use href="#bird-mini"/></svg></span><div class="bd"><div class="top"><span>Petyr</span><span>6:15</span></div><b>NVDA verdict changed</b><p>Fairly valued → Priced for perfection.</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="rule"></div></div>
+
+<section class="sec" aria-labelledby="dec-h">
+  <div class="wrap">
+    <span class="eyebrow">Decoded</span>
+    <h2 class="sec-h" id="dec-h">The fine print,<br><span class="lt">in three bullets.</span></h2>
+    <p class="sec-sub">A 10-K or a token's offering terms come back as three plain-English points, the risks as chips, and one paragraph with Petyr's read.</p>
+    <div class="dec-grid">
+      <article class="dcard" data-reveal>
+        <div class="dhead"><b>AAPL · 10-K</b><span class="pages">~<span class="n" data-count="120">120</span> pages → 3 bullets</span></div>
+        <ul class="bul">
+          <li><span>Services revenue hit an <em>all-time high</em> and is now a quarter of sales, so margins keep improving.</span></li>
+          <li><span>iPhone units were flat. Growth now comes from <em>price and the ecosystem</em>, not volume.</span></li>
+          <li><span>A new <em>$110B buyback</em> keeps cash flowing back to shareholders.</span></li>
+        </ul>
+        <div class="risk"><span>China exposure</span><span>Regulatory · DMA</span><span>Hardware cycles</span></div>
+        <p class="pread"><b>Petyr's read</b>A cash machine that leans more on services each year. The story is durability rather than fast growth.</p>
+      </article>
+      <article class="dcard" data-reveal>
+        <div class="dhead"><b>USDY · Token terms</b><span class="pages">~<span class="n" data-count="60">60</span> pages → 3 bullets</span></div>
+        <ul class="bul">
+          <li><span>Backed by <em>short-term US Treasuries</em> and bank deposits held by the issuer.</span></li>
+          <li><span>Yield builds up <em>in the token's price</em> instead of being paid out.</span></li>
+          <li><span>Redeeming directly needs <em>issuer onboarding</em>. Most holders exit by selling on-chain.</span></li>
+        </ul>
+        <div class="risk"><span class="warn">US persons excluded</span><span>Issuer KYC to redeem</span><span>Rate-sensitive</span></div>
+        <p class="pread"><b>Petyr's read</b>Works like a tokenized money-market account for people outside the US. Check the eligibility rules before you rely on redemption.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="rule"></div></div>
+
+<section class="sec" id="trust" aria-labelledby="tr-h">
+  <div class="wrap">
+    <span class="eyebrow">Trust</span>
+    <h2 class="sec-h" id="tr-h">Petyr shows its work.</h2>
+    <div class="rules">
+      <div class="rulei" data-reveal><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6"/></svg><h3>Numbers come from data, never the model.</h3><p>Every figure on a card is pulled from a source: filings, FRED, market data, issuer attestations.</p></div>
+      <div class="rulei" data-reveal><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><h3>Every verdict has a basis and a date.</h3><p>"Base-case DCF, as of this morning." You always know why Petyr thinks it, and when.</p></div>
+      <div class="rulei" data-reveal><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M5 7h14M5 17h8"/></svg><h3>It describes. It doesn't push.</h3><p>"Priced for perfection" is a read on the numbers. Petyr never tells you to buy or sell.</p></div>
+      <div class="rulei" data-reveal><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><h3>Wins and losses, on the record.</h3><p>Petyr will publish how its verdicts turned out, including the ones it got wrong.</p></div>
+    </div>
+    <div class="sources" data-reveal>
+      <span class="lbl">Built on</span>
+      <span class="s">Financial Datasets</span><span class="s">SEC EDGAR</span><span class="s">FRED</span><span class="s">Exa</span><span class="s">Issuer attestations<small>in development</small></span><span class="s">On-chain data<small>in development</small></span>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="join" aria-labelledby="cta-h">
+  <div class="wrap">
+    <p class="quote" data-reveal>“Most people don't lose money in the market because it's hard. They lose it because <span>nobody explained</span> what was actually happening.”</p>
+    <div class="bird-wrap">
+      <svg class="bird-svg" id="cta-bird" viewBox="0 0 220 220" aria-hidden="true">
+        <circle cx="110" cy="110" r="108" fill="url(#vb-halo)"/>
+        <ellipse class="shadow" cx="110" cy="204" rx="46" ry="9" fill="#000" opacity=".28"/>
+        <g class="bird">
+          <path d="M150 120 q40 6 52 26 q-26 4 -44 -6 z" fill="#C98B2E"/>
+          <g stroke="#B8801F" stroke-width="5" stroke-linecap="round"><path d="M96 178 v14"/><path d="M124 178 v14"/></g>
+          <ellipse cx="110" cy="124" rx="62" ry="58" fill="url(#vb-body)"/>
+          <ellipse cx="104" cy="134" rx="40" ry="40" fill="url(#vb-belly)"/>
+          <path class="wing-back" d="M160 110 q34 14 30 44 q-26 -4 -38 -26 z" fill="#D69B33"/>
+          <g class="tuft" fill="#E6B860"><path d="M96 64 q-6 -22 6 -34 q8 14 4 30 z"/><path d="M112 60 q2 -24 16 -30 q0 16 -8 30 z"/></g>
+          <circle cx="92" cy="108" r="15" fill="#fff"/><circle cx="128" cy="108" r="15" fill="#fff"/>
+          <g class="pupils"><circle cx="93" cy="110" r="7" fill="#241803"/><circle cx="129" cy="110" r="7" fill="#241803"/><circle cx="96" cy="107" r="2.4" fill="#fff"/><circle cx="132" cy="107" r="2.4" fill="#fff"/></g>
+          <rect class="lid" x="76" y="92" width="32" height="32" rx="16" fill="url(#vb-body)"/>
+          <rect class="lid" x="112" y="92" width="32" height="32" rx="16" fill="url(#vb-body)"/>
+          <path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/>
+          <ellipse cx="74" cy="128" rx="8" ry="5" fill="#F0A65A" opacity=".55"/><ellipse cx="146" cy="128" rx="8" ry="5" fill="#F0A65A" opacity=".55"/>
+          <g class="wing"><path d="M58 116 q-34 8 -40 36 q28 4 44 -14 q6 -12 -4 -22 z" fill="#E0A93F"/><path d="M58 116 q-26 8 -32 28" fill="none" stroke="#C98B2E" stroke-width="3" stroke-linecap="round"/></g>
+        </g>
+      </svg>
+    </div>
+    <h2 id="cta-h">Know <span class="gold-grad">before</span> you invest.</h2>
+    <p class="sec-sub">Join the waitlist for one email when the app is ready and an early invite to the research preview.</p>
+    <form class="wl" id="waitlist-form-foot" data-source="verdict-foot">
+      <div class="wl-row">
+        <label class="sr" for="wl-email-foot">Email address</label>
+        <input type="email" name="email" id="wl-email-foot" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+        <button class="btn btn-gold" type="submit">Join the waitlist</button>
+      </div>
+      <div class="wl-extra open"><div>
+        <p class="wl-q" id="wl-q-reg">Optional: where are you based?</p>
+        <div class="chips" role="radiogroup" aria-labelledby="wl-q-reg">
+          <label class="chip"><input type="radio" name="region" value="us" id="f-r-us"><span>United States</span></label>
+          <label class="chip"><input type="radio" name="region" value="non-us" id="f-r-non"><span>Outside the US</span></label>
+        </div>
+      </div></div>
+      <div class="wl-msg" id="wl-msg-foot" role="status"></div>
+    </form>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="#top"><svg width="28" height="28"><use href="#logo"/></svg>Petyr</a>
+        <p>Know before you invest. Institutional-grade research on stocks and tokenized assets, in plain English.</p>
+      </div>
+      <div class="flinks">
+        <div><h4>Product</h4><a href="#how">How it works</a><a href="#tokens">Tokens</a><a href="#briefs">Briefs</a><a href="/app">Research preview</a></div>
+        <div><h4>Follow</h4><a href="https://x.com/PetyrAI" rel="noopener">@PetyrAI</a><a href="#join">Waitlist</a></div>
+      </div>
+    </div>
+    <div class="fbot"><span>© 2026 Petyr · Research, not financial advice. Markets involve risk.</span><span>petyr.ai</span></div>
+  </div>
+</footer>
+
+<!-- concept switcher — remove when promoting -->
+<nav class="cswitch" aria-label="Design concepts"><a href="index.html">All</a><a href="verdict.html" aria-current="page">A</a><a href="decoded.html">B</a><a href="vault.html">C</a></nav>
+
+<script src="/landing.js" defer></script>
+<script src="verdict.js" defer></script>
+</body>
+</html>

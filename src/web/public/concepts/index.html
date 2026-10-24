@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Petyr Landing Concepts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="icon" type="image/svg+xml" href="/bird.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Big+Shoulders+Display:wght@900&display=swap" rel="stylesheet">
+<style>
+  /* Review page for the three landing directions.
+     Layout: one column of reading, then three specimen cards side by side,
+     then the recommendation and the shared changes. Theme-aware. */
+  :root{
+    --bg:#F4F4F1; --card:#FFFFFF; --fg:#15171C; --muted:#5A606B; --faint:#8A909A; --rule:#E1E2DD;
+    --accent:#9A6B12; --accent-bg:rgba(230,184,96,.18);
+    --f-ui:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --f-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){--bg:#0B0C10;--card:#12141A;--fg:#EEEEEA;--muted:#A3A9B4;--faint:#727985;--rule:#232631;--accent:#E6B860;--accent-bg:rgba(230,184,96,.12);color-scheme:dark}
+  }
+  :root[data-theme="dark"]{--bg:#0B0C10;--card:#12141A;--fg:#EEEEEA;--muted:#A3A9B4;--faint:#727985;--rule:#232631;--accent:#E6B860;--accent-bg:rgba(230,184,96,.12);color-scheme:dark}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+  .page{max-width:1180px;margin:0 auto;padding-block:56px 72px}
+  .eyebrow{font:700 12px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin-top:12px;text-wrap:balance}
+  .lede{font-size:18px;color:var(--muted);max-width:40em;margin-top:16px;font-weight:500}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:44px}
+  .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--rule);border-radius:18px;overflow:hidden;min-width:0}
+  .spec{position:relative;height:220px;padding:22px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+  .sw{display:flex;gap:6px}
+  .sw i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(127,127,127,.35)}
+  .spec-a{background:#07080B;color:#F4F4F0}
+  .spec-a .t{font:800 38px/1 var(--f-ui);letter-spacing:-.045em}
+  .spec-a .t span{background:linear-gradient(100deg,#F3D08A,#E6B860 40%,#FFE7B0 50%,#E6B860 60%,#F3D08A);background-size:250% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;transition:background-position 1.2s ease}
+  .card:hover .spec-a .t span{background-position:-50% 0}
+  .spec-a .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .spec-a .chips b{font:700 10px/1 var(--f-mono);padding:6px 9px;border-radius:999px;border:1px solid}
+  .spec-b{background:#F6F6F2;color:#121419}
+  .spec-b .t{font:800 40px/.95 'Bricolage Grotesque',var(--f-ui);letter-spacing:-.05em}
+  .spec-b mark{color:inherit;background:linear-gradient(104deg,transparent .2em,#F7D57F .3em,#F7D57F calc(100% - .3em),transparent calc(100% - .2em)) no-repeat 0 60%/100% 78%;transition:background-size .9s cubic-bezier(.6,.05,.25,1)}
+  .card:hover .spec-b mark{background-size:0% 78%}
+  .spec-b .doc{font:italic 15px 'Times New Roman',Times,serif;color:#787E89}
+  .spec-b .doc s{text-decoration-color:#C2412F;text-decoration-thickness:2px}
+  .spec-b .doc b{font:700 14px var(--f-ui);font-style:normal;color:#121419;margin-left:6px}
+  .spec-c{background:radial-gradient(70% 80% at 80% 90%,rgba(230,184,96,.16),transparent 70%),#050608;color:#EEEBE3}
+  .spec-c .t{font:900 44px/.86 'Big Shoulders Display',Impact,sans-serif;text-transform:uppercase}
+  .spec-c .t span{color:transparent;-webkit-text-stroke:1.5px #E6B860}
+  .spec-c .coin{position:absolute;right:22px;bottom:22px;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font:900 17px 'Big Shoulders Display',Impact,sans-serif;color:rgba(18,12,3,.85);background:radial-gradient(circle at 32% 26%,#FFF4D2,#F3D08A 22%,#D9A441 62%,#7E5A1C);box-shadow:inset 0 0 0 4px rgba(255,255,255,.14),0 16px 30px -14px #000;transition:transform .8s cubic-bezier(.16,1,.3,1)}
+  .spec-c .ring{position:absolute;right:6px;bottom:6px;width:106px;height:106px;border-radius:50%;border:1.5px solid #E6B860;box-shadow:0 0 0 6px rgba(230,184,96,.14);transition:transform .8s cubic-bezier(.16,1,.3,1)}
+  .card:hover .spec-c .ring{transform:translate(-14px,-10px) scale(1.06)}
+  .body{display:flex;flex-direction:column;gap:14px;padding:22px 22px 24px;flex:1}
+  .name{display:flex;align-items:baseline;gap:10px}
+  .name b{font:700 13px var(--f-mono);color:var(--accent)}
+  .name h2{font-size:24px;letter-spacing:-.02em;line-height:1.1}
+  .idea{color:var(--muted);font-weight:500}
+  h3{font:700 11.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  ul{list-style:none;display:grid;gap:6px}
+  li{position:relative;padding-left:16px;font-size:14.5px;line-height:1.5}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .fit{font-size:14.5px;line-height:1.5}
+  .fit strong{font-weight:700}
+  .open{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--fg);color:var(--bg);font-weight:700;text-decoration:none;transition:transform .2s}
+  .open:hover{transform:translateY(-1px)}
+  .pick{margin-top:56px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+  .panel{background:var(--card);border:1px solid var(--rule);border-radius:18px;padding:26px 28px;min-width:0}
+  .panel.rec{background:var(--accent-bg);border-color:transparent}
+  .panel h2{font-size:22px;letter-spacing:-.02em;line-height:1.2;margin-top:8px;text-wrap:balance}
+  .panel p{color:var(--muted);margin-top:10px;font-size:15.5px}
+  .panel p strong{color:var(--fg)}
+  .panel ul{margin-top:12px}
+  .panel code{font:600 13px var(--f-mono);background:var(--accent-bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+  ol.steps{margin-top:12px;padding-left:20px;display:grid;gap:6px;font-size:14.5px}
+  ol.steps li{padding-left:4px}
+  ol.steps li::before{display:none}
+  .foot{margin-top:40px;font:500 12.5px var(--f-mono);color:var(--faint)}
+  @media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}.pick{grid-template-columns:minmax(0,1fr)}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="eyebrow">Petyr · waitlist page</p>
+  <h1>Three directions for the landing page</h1>
+  <p class="lede">Each one is a complete, working page with its own motion, built around the October plan: stocks plus tokenized treasuries, gold, stock tokens and real estate. Open one and scroll it. The A / B / C pill at the bottom of every page switches between them.</p>
+
+  <div class="grid">
+    <article class="card">
+      <div class="spec spec-a" aria-hidden="true">
+        <div class="t">Know <span>before</span><br>you invest.</div>
+        <div class="chips"><b style="color:#E6B860;border-color:rgba(230,184,96,.4)">FAIRLY VALUED</b><b style="color:#34D399;border-color:rgba(52,211,153,.4)">BACKING VERIFIED</b></div>
+        <div class="sw"><i style="background:#07080B"></i><i style="background:#E6B860"></i><i style="background:#F3D08A"></i><i style="background:#34D399"></i><i style="background:#86A9FF"></i></div>
+      </div>
+      <div class="body">
+        <div class="name"><b>A</b><h2>Verdict</h2></div>
+        <p class="idea">The product, working. The hero is the Ask Petyr card answering four real questions in a loop, and the page walks through verdict, snapshot and full reasoning.</p>
+        <div><h3>Motion</h3><ul>
+          <li>Question types itself, the agent's tools tick off, the card assembles</li>
+          <li>Watchlist card deepens through three levels as you scroll</li>
+          <li>Morning-brief notifications drop onto a lock screen; the bird follows your cursor</li>
+        </ul></div>
+        <p class="fit"><strong>Best if</strong> you want the clearest explanation of what the app does, closest to your current brand and App Store mockups.</p>
+        <p class="fit"><strong>Watch out:</strong> the most conventional of the three. Strong, but it looks like a good fintech page rather than only Petyr.</p>
+        <a class="open" href="verdict.html">Open concept A →</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="spec spec-b" aria-hidden="true">
+        <div class="t">Know <mark>before</mark><br>you invest.</div>
+        <p class="doc"><s>Trades at a 2.1% discount to NAV</s><b>→ Sells for less than what's inside.</b></p>
+        <div class="sw"><i style="background:#F6F6F2"></i><i style="background:#121419"></i><i style="background:#F7D57F"></i><i style="background:#C2412F"></i><i style="background:#0E7A57"></i></div>
+      </div>
+      <div class="body">
+        <div class="name"><b>B</b><h2>Decoded</h2></div>
+        <p class="idea">Petyr as translator. A light page made of documents: a 10-K, an attestation report and an offering memo get highlighted and annotated in the margin.</p>
+        <div><h3>Motion</h3><ul>
+          <li>Document stack shuffles; the highlighter sweeps and margin notes pin beside each passage</li>
+          <li>Jargon is struck through and rewritten in plain English as you scroll</li>
+          <li>Before/after slider on token terms, a printing morning brief, a stamp on sign-up</li>
+        </ul></div>
+        <p class="fit"><strong>Best if</strong> you want the warmest, most beginner-friendly voice, and a look no other finance app has.</p>
+        <p class="fit"><strong>Watch out:</strong> a light theme breaks from the dark gold brand, and it shows less of the actual app UI.</p>
+        <a class="open" href="decoded.html">Open concept B →</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="spec spec-c" aria-hidden="true">
+        <div class="t">What's inside<br><span>the token?</span></div>
+        <div class="ring"></div><div class="coin">PAXG</div>
+        <div class="sw"><i style="background:#050608"></i><i style="background:#E6B860"></i><i style="background:#3DDC97"></i><i style="background:#FFB454"></i><i style="background:#86A9FF"></i></div>
+      </div>
+      <div class="body">
+        <div class="name"><b>C</b><h2>Vault</h2></div>
+        <p class="idea">Tokenized-first. A lens slides across five tokens and shows what backs each one: allocated gold, T-bills, custodied shares, an unverified villa, nothing at all.</p>
+        <div><h3>Motion</h3><ul>
+          <li>Lens follows the cursor or glides on its own; on phones it becomes a row scanner</li>
+          <li>A scan line ticks off the eight token checks</li>
+          <li>Premium bars grow past an alert line; asset classes orbit the bird; a seal stamps on sign-up</li>
+        </ul></div>
+        <p class="fit"><strong>Best if</strong> you're leading with "the home for tokenized assets" and the crypto-native global investor.</p>
+        <p class="fit"><strong>Watch out:</strong> the tokenized tools are still being built, so the page leans on what's coming. It says so in the copy.</p>
+        <a class="open" href="vault.html">Open concept C →</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="pick">
+    <section class="panel rec">
+      <p class="eyebrow">My pick</p>
+      <h2>Go with C, and borrow A's three-depth section.</h2>
+      <p>Your plan now names the <strong>crypto-native global investor</strong> as the primary persona, and C is the only direction that opens with their actual question: what backs this token, and can I get my money out? The lens explains that in one gesture, and nothing else in the category looks like it.</p>
+      <p>C doesn't show the app itself much. A's sticky verdict → snapshot → reasoning section would slot in after the eight checks and fill that gap. If you'd rather lead with the stock product that works today, A is the safe choice; its hero already cycles through tokens too.</p>
+    </section>
+    <section class="panel">
+      <p class="eyebrow">In all three</p>
+      <ul>
+        <li>Copy rewritten for stocks and tokenized assets. The live page only covers stocks and says 18 tools; the plan says 19.</li>
+        <li>The NVDA example is consistent now. The live page shows $131.4 against a $142 fair value but says "8% above" it.</li>
+        <li>The waitlist asks two optional questions, what to watch and US or not, so you have the geography data §5 needs for the rail decision. The server keeps them and adds them to the CSV export.</li>
+        <li>Each form tags its source (<code>vault-hero</code>, <code>verdict-foot</code>…), so an A/B test shows which page converts.</li>
+        <li>No third-party scripts, so they fit the current CSP. Reduced-motion support, complete without JavaScript, "Research, not advice" on every page, and a made-up token for the one negative verdict.</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <p class="eyebrow">To ship one</p>
+      <ol class="steps">
+        <li>Copy <code>concepts/&lt;name&gt;.html</code> over <code>public/index.html</code>.</li>
+        <li>Move <code>&lt;name&gt;.js</code> to <code>public/</code>, point the script tag at <code>/&lt;name&gt;.js</code>, and add that path to <code>PUBLIC_PATHS</code> in <code>server.ts</code>.</li>
+        <li>Delete the <code>robots</code> tag and the concept-switcher block (both are marked).</li>
+      </ol>
+      <p>Until then the concepts live at <code>/concepts/</code>, behind the invite gate in production.</p>
+    </section>
+    <section class="panel">
+      <p class="eyebrow">Numbers on these pages</p>
+      <p>Every price, yield and verdict is illustrative and labeled as such on the page. Real tokens only get neutral or positive reads; VLLA, the "backing unverified" example, is made up.</p>
+    </section>
+  </div>
+  <p class="foot">Petyr · research, not financial advice</p>
+</main>
+</body>
+</html>

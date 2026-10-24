@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Petyr — Know before you invest</title>
+<!-- concept page: drop the robots tag when promoting to index.html -->
+<meta name="robots" content="noindex" />
+<meta name="description" content="Tokenized treasuries, gold, stocks and more are a wallet away. Petyr checks what backs them, whether you can redeem, and why the price drifts, in plain English." />
+<meta property="og:title" content="Petyr — What's inside the token?" />
+<meta property="og:description" content="The AI research companion for tokenized assets. Know before you invest." />
+<meta name="theme-color" content="#050608" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="icon" type="image/svg+xml" href="/bird.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Concept C · Vault
+     Layout: every token is a sealed object, and the page lets you look
+     inside. The hero is a lens you move across tokens; the rest of the page
+     is the inspection: eight checks, the premium chart, who may hold it.
+     Display type borrows from bullion stamps (condensed caps). */
+  :root{
+    --bg:#050608; --steel:#0B0E13; --steel2:#11151C; --steel3:#181D27;
+    --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
+    --ink:#EEEBE3; --muted:#9AA0AB; --muted2:#6C737E;
+    --gold:#E6B860; --gold2:#F3D08A; --gold-deep:#B98A32; --gold-ink:#1A1404;
+    --verify:#3DDC97; --warn:#FFB454; --risk:#FF7A6B; --azure:#86A9FF;
+    --f-stamp:'Big Shoulders Display','Arial Narrow','Roboto Condensed',Impact,sans-serif;
+    --f-ui:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --f-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --gutter:max(20px, env(safe-area-inset-left, 0px));
+    --gutter-r:max(20px, env(safe-area-inset-right, 0px));
+    color-scheme:dark;
+  }
+  @property --sheen{syntax:'<angle>';inherits:false;initial-value:0deg}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--gold2);outline-offset:3px;border-radius:6px}
+  .wrap{max-width:1240px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter-r)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .kicker{font:600 12px/1.3 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .stamp-h{font-family:var(--f-stamp);font-weight:900;text-transform:uppercase;letter-spacing:-.005em;line-height:.88;text-wrap:balance}
+  h2.sec-h{font-size:clamp(46px,6.4vw,92px);margin-top:16px}
+  h2.sec-h .dim{color:var(--muted2)}
+  .sec-sub{color:var(--muted);font-size:18px;line-height:1.6;margin-top:20px;max-width:33em;font-weight:500}
+  .sec{padding-block:120px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;border-radius:10px;padding:13px 20px;cursor:pointer;border:1px solid transparent;transition:transform .2s var(--ease-out),box-shadow .2s;white-space:nowrap}
+  .btn-gold{background:linear-gradient(120deg,var(--gold2),var(--gold) 55%,var(--gold-deep));color:var(--gold-ink);box-shadow:0 8px 26px -8px rgba(230,184,96,.5),inset 0 1px 0 rgba(255,255,255,.4)}
+  .btn-gold:hover{transform:translateY(-1px)}
+  .btn-gold:disabled{opacity:.7;cursor:progress}
+
+  /* ===== Nav ===== */
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+  .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:rgba(5,6,8,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .nav-links{display:flex;gap:28px;font-size:14px;font-weight:600;color:var(--muted)}
+  .nav-links a:hover{color:var(--ink)}
+  .nav .btn{padding:10px 16px;font-size:14px}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;padding-block:52px 40px;overflow:hidden;isolation:isolate}
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 50% at 50% 62%,rgba(230,184,96,.12),transparent 70%),radial-gradient(40% 40% at 85% 10%,rgba(134,169,255,.08),transparent 70%)}
+  .hero-top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.5fr);gap:48px;align-items:end}
+  h1.hero-h{font-size:clamp(52px,8.6vw,128px);margin-top:16px}
+  .hero-h .ln{white-space:nowrap}
+  .hero-h .ln{display:block;animation:shutter 1s var(--ease-out) both}
+  .hero-h .ln:nth-child(2){animation-delay:.12s;color:transparent;-webkit-text-stroke:2px var(--gold);}
+  @keyframes shutter{from{clip-path:inset(0 0 100% 0);transform:translateY(18px)}to{clip-path:inset(0 0 -10% 0)}}
+  .hero-side p{color:var(--muted);font-size:17.5px;line-height:1.6;font-weight:500}
+  .hero-side p b{color:var(--ink)}
+  .tagline{display:inline-flex;align-items:center;gap:10px;margin-top:18px;font:700 13px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--gold2)}
+  .tagline::before{content:"";width:22px;height:1px;background:var(--gold)}
+
+  /* X-ray band */
+  .xray{position:relative;display:grid;margin-top:40px;border-block:1px solid var(--line);cursor:none;touch-action:pan-y;--x:10%;--y:168px;--r:150px;--h:132px}
+  .xr-layer{grid-area:1/1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-block:40px 34px}
+  .xr-out{background:linear-gradient(180deg,transparent,rgba(255,255,255,.012))}
+  .xr-in{background:radial-gradient(circle at var(--x) var(--y),#121823 0,#0A0D13 60%),repeating-linear-gradient(0deg,rgba(134,169,255,.06) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(134,169,255,.06) 0 1px,transparent 1px 22px);background-blend-mode:normal;clip-path:circle(var(--r) at var(--x) var(--y));-webkit-clip-path:circle(var(--r) at var(--x) var(--y))}
+  .cell{display:grid;grid-template-rows:164px auto;justify-items:center;text-align:center;padding-inline:10px;border-right:1px solid var(--line);outline:none}
+  .cell:last-child{border-right:0}
+  .vis{display:grid;place-items:center;width:100%}
+  .coin{position:relative;width:124px;height:124px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 32% 26%,var(--c0) 0%,var(--c1) 22%,var(--c2) 62%,var(--c3) 100%);box-shadow:inset 0 0 0 5px rgba(255,255,255,.14),inset 0 -12px 22px rgba(0,0,0,.35),0 24px 44px -22px rgba(0,0,0,.9);animation:drop .9s var(--ease-out) both;animation-delay:calc(var(--i) * 90ms + .35s)}
+  .coin::before{content:"";position:absolute;inset:10px;border-radius:50%;border:1.5px dashed rgba(0,0,0,.22)}
+  .coin::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--sheen),transparent 0 60%,rgba(255,255,255,.38) 70%,transparent 80%);mix-blend-mode:soft-light;animation:sheen 6s linear infinite;animation-delay:calc(var(--i) * -1.2s)}
+  @keyframes sheen{to{--sheen:360deg}}
+  @keyframes drop{from{opacity:0;transform:translateY(-26px) scale(.9)}}
+  .coin b{position:relative;font:900 29px/1 var(--f-stamp);letter-spacing:.02em;color:rgba(18,12,3,.84)}
+  .c-gold{--c0:#FFF4D2;--c1:#F3D08A;--c2:#D9A441;--c3:#7E5A1C}
+  .c-steel{--c0:#F0F4FF;--c1:#C9D6F5;--c2:#7F97C9;--c3:#33446B}
+  .c-jade{--c0:#ECFFF6;--c1:#B7EBD2;--c2:#5FAE88;--c3:#21503A}
+  .c-bronze{--c0:#FFE9D6;--c1:#E6BB97;--c2:#A86F49;--c3:#55331F}
+  .c-violet{--c0:#F3EFFF;--c1:#CEC5FA;--c2:#8E7FD8;--c3:#3A3068}
+  .meta b{display:block;font:800 20px/1.2 var(--f-stamp);letter-spacing:.04em;text-transform:uppercase}
+  .meta small{display:block;font-size:12.5px;color:var(--muted2);font-weight:600;margin-top:2px}
+  .meta .px{font:600 13px var(--f-mono);color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+  .inside{width:150px;max-width:100%;height:auto}
+  .facts b{display:block;font:800 19px/1.15 var(--f-stamp);letter-spacing:.04em;text-transform:uppercase;color:var(--gold2)}
+  .facts p{font-size:12.5px;line-height:1.45;color:#C3C8D1;font-weight:500;margin-top:5px;max-width:19em;margin-inline:auto}
+  .vbadge{display:inline-block;margin-top:10px;font:700 10.5px/1 var(--f-mono);letter-spacing:.05em;padding:6px 9px;border-radius:999px;border:1px solid}
+  .vb-ok{color:var(--verify);border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.1)}
+  .vb-az{color:var(--azure);border-color:rgba(134,169,255,.4);background:rgba(134,169,255,.1)}
+  .vb-warn{color:var(--warn);border-color:rgba(255,180,84,.4);background:rgba(255,180,84,.1)}
+  .vb-risk{color:var(--risk);border-color:rgba(255,122,107,.45);background:rgba(255,122,107,.1)}
+  .vb-mute{color:var(--muted);border-color:var(--line2);background:rgba(255,255,255,.04)}
+  .lens{position:absolute;left:var(--x);top:var(--y);width:calc(var(--r) * 2);height:calc(var(--r) * 2);margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);pointer-events:none;z-index:3;animation:lensIn 1s var(--ease-out) .8s both}
+  @keyframes lensIn{from{opacity:0;transform:scale(.6)}}
+  .lens svg{width:100%;height:100%;overflow:visible}
+  .lens .ticks{transform-origin:50% 50%;animation:turn 40s linear infinite}
+  @keyframes turn{to{transform:rotate(360deg)}}
+  .xr-cap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:14px;font:500 12px var(--f-mono);color:var(--muted2)}
+  .xr-cap .hint::before{content:"◎ ";color:var(--gold)}
+
+  .hero-join{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:center;margin-top:46px}
+  .wl-row{display:flex;gap:8px;padding:6px;border-radius:14px;border:1px solid var(--line2);background:var(--steel);max-width:520px;transition:border-color .25s,box-shadow .25s}
+  .wl-row:focus-within{border-color:rgba(230,184,96,.6);box-shadow:0 0 0 4px rgba(230,184,96,.1)}
+  .wl-row input{flex:1;min-width:0;background:transparent;border:0;outline:none;padding:10px 12px;font:500 15.5px var(--f-ui)}
+  .wl-row input::placeholder{color:var(--muted2)}
+  .wl-msg{font-size:14px;margin-top:12px;font-weight:600;display:none}
+  .wl-msg.ok{display:block;color:var(--verify)}
+  .wl-msg.err{display:block;color:var(--risk)}
+  .wl-note{font-size:12.5px;color:var(--muted2);margin-top:10px;font-weight:500}
+  .proof{display:flex;gap:34px;list-style:none}
+  .proof li{font-size:12.5px;color:var(--muted2);font-weight:600}
+  .proof b{display:block;font:800 40px/1 var(--f-stamp);color:var(--ink);letter-spacing:.01em}
+
+  /* ===== Checks ===== */
+  .checks{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:60px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--steel)}
+  .chk{padding:28px 24px 30px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transition:background .6s}
+  .chk:nth-child(4n){border-right:0}
+  .chk:nth-last-child(-n+4){border-bottom:0}
+  .chk svg{display:block}
+  .chk .ring{stroke:var(--line2);transition:stroke .5s}
+  .chk .tick{stroke:var(--verify);stroke-dasharray:24;stroke-dashoffset:0;transition:stroke-dashoffset .6s var(--ease-out)}
+  .chk h3{font:800 24px/1.1 var(--f-stamp);letter-spacing:.03em;text-transform:uppercase;margin-top:18px}
+  .chk p{color:var(--muted);font-size:14.5px;line-height:1.55;margin-top:8px;font-weight:500}
+  .chk.ok{background:linear-gradient(180deg,rgba(61,220,151,.05),transparent 70%)}
+  .chk.ok .ring{stroke:rgba(61,220,151,.5)}
+  .js .checks:not(.done) .chk:not(.ok) .tick{stroke-dashoffset:24}
+  .scan{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);box-shadow:0 0 18px 3px rgba(230,184,96,.45);opacity:0;pointer-events:none;z-index:2}
+  .checks-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;font:500 12.5px var(--f-mono);color:var(--muted2)}
+  .checks-foot .soon{color:var(--gold)}
+
+  /* ===== Premium chart ===== */
+  .prem{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:64px;align-items:center}
+  .chart-card{border:1px solid var(--line);border-radius:18px;background:var(--steel);padding:22px 22px 16px}
+  .chart-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+  .chart-head b{font:800 22px var(--f-stamp);letter-spacing:.04em;text-transform:uppercase}
+  .chart-head span{font:600 12.5px var(--f-mono);color:var(--muted2)}
+  .chart-scroll{overflow-x:auto;margin-top:10px}
+  .chart{display:block;width:100%;min-width:520px;height:auto}
+  .chart .grid line{stroke:var(--line)}
+  .chart .zero{stroke:var(--line2)}
+  .chart .alert{stroke:var(--warn);stroke-dasharray:4 4;opacity:.7}
+  .chart text{fill:var(--muted2);font:500 11px var(--f-mono)}
+  .chart .lbl-warn{fill:var(--warn)}
+  .chart .lbl-now{fill:var(--ink);font-weight:700}
+  .chart rect.pr{fill:var(--warn)}
+  .chart rect.dc{fill:var(--verify)}
+  .chart rect{transform-box:fill-box;transition:transform .5s var(--ease-out);transition-delay:calc(var(--i) * 18ms)}
+  .chart rect.pr{transform-origin:50% 100%}
+  .chart rect.dc{transform-origin:50% 0%}
+  .js .chart-card:not(.in) rect{transform:scaleY(0)}
+  .chart .now{fill:var(--ink)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font:500 12px var(--f-mono);color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:7px;vertical-align:-1px}
+  .push{display:flex;gap:12px;align-items:flex-start;margin-top:28px;max-width:420px;padding:14px 15px;border-radius:16px;background:rgba(28,32,42,.8);border:1px solid var(--line2)}
+  .push .ic{flex:none;width:34px;height:34px;border-radius:9px;background:linear-gradient(140deg,var(--gold2),var(--gold-deep));display:grid;place-items:center}
+  .push b{display:block;font-size:14px}
+  .push p{font-size:13px;color:var(--muted);margin-top:2px}
+  .push small{font:500 11px var(--f-mono);color:var(--muted2)}
+
+  /* ===== Orbit ===== */
+  .orbit-sec{text-align:center}
+  .orbit-sec .sec-sub{margin-inline:auto}
+  .orbit{position:relative;height:440px;margin-top:40px}
+  .orbit .core{position:absolute;left:50%;top:50%;width:170px;transform:translate(-50%,-50%);z-index:5}
+  .orbit .ring{position:absolute;left:50%;top:50%;width:72%;height:68%;transform:translate(-50%,-50%);border:1px dashed var(--line2);border-radius:50%}
+  .orb{position:absolute;left:var(--ox,50%);top:var(--oy,50%);transform:translate(-50%,-50%) scale(var(--os,1));opacity:var(--oo,1);z-index:var(--oz,6);display:flex;align-items:center;gap:10px;padding:10px 16px 10px 10px;border-radius:999px;background:var(--steel2);border:1px solid var(--line2);white-space:nowrap;font-weight:700;font-size:14.5px;box-shadow:0 14px 30px -18px rgba(0,0,0,.9)}
+  .orb .dot{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 32% 26%,var(--c0),var(--c1) 30%,var(--c2) 70%,var(--c3))}
+  .orbit-list{display:none}
+
+  /* ===== Eligibility ===== */
+  .elig{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:center}
+  .rules{display:grid;gap:10px}
+  .rule{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--steel)}
+  .rule .chip{font:700 11px var(--f-mono);letter-spacing:.04em;padding:7px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
+  .rule p{font-size:14.5px;color:var(--muted);font-weight:500}
+  .us-note{margin-top:26px;padding:18px 20px;border-left:2px solid var(--gold);background:linear-gradient(90deg,rgba(230,184,96,.07),transparent);font-size:15.5px;color:var(--ink);font-weight:500;max-width:32em}
+
+  /* ===== Two verdicts ===== */
+  .dual{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px;align-items:center}
+  .cards2{position:relative;display:grid;padding-bottom:20px}
+  .vcard{grid-area:1/1;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(180deg,var(--steel3),var(--steel));padding:22px;box-shadow:0 40px 80px -40px rgba(0,0,0,.95);transition:transform 1s var(--ease-out)}
+  .vcard.under{transform:translate(0,0)}
+  .vcard.wrap-t{transform:translate(0,0);z-index:2}
+  .cards2.in .vcard.under{transform:translate(-4%,-6%) rotate(-2deg)}
+  .cards2.in .vcard.wrap-t{transform:translate(5%,26%) rotate(1.5deg)}
+  .vc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .vc-top .who{font:700 11.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)}
+  .vc-name{font:900 40px/1 var(--f-stamp);text-transform:uppercase;margin-top:10px}
+  .vc-read{font-size:15px;color:var(--muted);margin-top:8px;font-weight:500}
+  .vc-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+  .vc-tiles div{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:rgba(255,255,255,.02)}
+  .vc-tiles small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:700}
+  .vc-tiles b{display:block;font:600 16px var(--f-mono);margin-top:3px;font-variant-numeric:tabular-nums}
+
+  /* ===== Join ===== */
+  .join{position:relative;padding-block:120px;border-top:1px solid var(--line);overflow:hidden;isolation:isolate}
+  .join::before{content:"";position:absolute;right:-10%;top:-20%;width:700px;height:700px;border-radius:50%;background:radial-gradient(closest-side,rgba(230,184,96,.13),transparent);z-index:-1}
+  .join-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:64px;align-items:center}
+  .opt{margin-top:22px}
+  .opt p{font-size:12.5px;color:var(--muted2);font-weight:600;margin-bottom:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chipx{position:relative;cursor:pointer}
+  .chipx input{position:absolute;opacity:0;pointer-events:none}
+  .chipx span{display:inline-block;font-size:12.5px;font-weight:600;color:var(--muted);border:1px solid var(--line2);border-radius:8px;padding:7px 11px;transition:all .2s}
+  .chipx:hover span{color:var(--ink);border-color:rgba(255,255,255,.28)}
+  .chipx input:checked+span{color:var(--gold-ink);background:linear-gradient(120deg,var(--gold2),var(--gold));border-color:transparent}
+  .chipx input:focus-visible+span{outline:2px solid var(--gold2);outline-offset:2px}
+  .seal{position:relative;width:min(340px,80vw);aspect-ratio:1;max-width:100%;margin:0 auto}
+  .seal svg.txt{position:absolute;inset:0;width:100%;height:100%;animation:turn 30s linear infinite}
+  .seal svg.txt text{fill:var(--gold);font:800 15px var(--f-stamp);letter-spacing:4.5px;text-transform:uppercase}
+  .seal .mid{position:absolute;inset:18%;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#1C212C,#0A0C11);border:1px solid var(--line2);box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+  .seal .mid .bird{width:58%}
+  .seal .done{position:absolute;inset:18%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(circle at 35% 30%,#26422F,#0E1A14);border:2px solid var(--verify);color:var(--verify);font:900 30px/1 var(--f-stamp);text-transform:uppercase;opacity:0;transform:scale(1.4)}
+  .seal .done small{display:block;font:600 11px var(--f-mono);letter-spacing:.12em;margin-top:8px;color:#9FE8C6}
+  .seal.joined .done{animation:sealIn .6s cubic-bezier(.2,1.4,.4,1) forwards}
+  .seal.joined svg.txt{animation-duration:3s}
+  @keyframes sealIn{to{opacity:1;transform:scale(1)}}
+
+  .site-foot{border-top:1px solid var(--line);padding-block:40px 36px}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;font:500 12.5px var(--f-mono);color:var(--muted2)}
+  .foot nav{display:flex;gap:20px;flex-wrap:wrap}
+  .foot nav a:hover{color:var(--ink)}
+
+  .js [data-reveal]{transition:opacity .9s var(--ease-out),transform 1s var(--ease-out)}
+  .js [data-reveal]:not(.in){opacity:0;transform:translateY(24px)}
+
+  /* concept switcher — remove when promoting */
+  .cswitch{position:fixed;left:max(14px, env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;background:rgba(17,21,28,.9);border:1px solid var(--line2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:600 11.5px var(--f-mono)}
+  .cswitch a{padding:7px 10px;border-radius:999px;color:var(--muted)}
+  .cswitch a[aria-current]{background:var(--gold);color:var(--gold-ink)}
+  .cswitch a:hover:not([aria-current]){color:var(--ink)}
+
+  @media (hover:none){.xray{cursor:default}}
+  @media (max-width:1020px){
+    .hero-top,.prem,.elig,.dual,.join-grid{grid-template-columns:minmax(0,1fr);gap:40px}
+    .hero-join{grid-template-columns:minmax(0,1fr)}
+    .checks{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .chk:nth-child(4n){border-right:1px solid var(--line)}
+    .chk:nth-child(2n){border-right:0}
+    .chk:nth-last-child(-n+4){border-bottom:1px solid var(--line)}
+    .chk:nth-last-child(-n+2){border-bottom:0}
+    .nav-links{display:none}
+  }
+  @media (max-width:760px){
+    .xray{--x:50%;--y:78px}
+    .xr-in{clip-path:inset(calc(var(--y) - var(--h) / 2) 0 calc(100% - var(--y) - var(--h) / 2) 0 round 18px);-webkit-clip-path:inset(calc(var(--y) - var(--h) / 2) 0 calc(100% - var(--y) - var(--h) / 2) 0 round 18px)}
+    .lens{left:0;right:0;width:auto;height:var(--h);margin:calc(var(--h) / -2) 0 0;border:1.5px solid var(--gold);border-radius:18px;box-shadow:0 0 0 6px rgba(230,184,96,.12),0 0 30px rgba(230,184,96,.2)}
+    .lens svg{display:none}
+    .xr-layer{grid-template-columns:minmax(0,1fr);padding-block:14px}
+    .xray{--h:140px}
+    .cell{grid-template-rows:none;grid-template-columns:112px minmax(0,1fr);justify-items:start;text-align:left;align-items:center;gap:14px;border-right:0;border-bottom:1px solid var(--line);padding:10px 0;height:140px;overflow:hidden}
+    .cell:last-child{border-bottom:0}
+    .coin{width:92px;height:92px}
+    .coin b{font-size:23px}
+    .inside{width:112px}
+    .facts p{margin-inline:0}
+    .orbit{display:none}
+    .orbit-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:32px;list-style:none;text-align:left}
+    .orbit-list .orb{position:static;transform:none;opacity:1;white-space:normal;font-size:13.5px}
+  }
+  @media (max-width:420px){.hero-h .ln{white-space:normal}}
+  @media (max-width:560px){
+    .sec{padding-block:84px}
+    .checks{grid-template-columns:minmax(0,1fr)}
+    .chk{border-right:0!important;border-bottom:1px solid var(--line)!important}
+    .chk:last-child{border-bottom:0!important}
+    .proof{gap:24px}
+    .vc-name{font-size:32px}
+    .rule{grid-template-columns:minmax(0,1fr);gap:10px}
+    .rule .chip{justify-self:start}
+    .cards2.in .vcard.wrap-t{transform:translate(2%,30%) rotate(1deg)}
+    .cards2{padding-bottom:90px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
+    .js [data-reveal]:not(.in){opacity:1;transform:none}
+    .js .checks:not(.done) .chk:not(.ok) .tick{stroke-dashoffset:0}
+    .js .chart-card:not(.in) rect{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#F3D08A"/><stop offset="1" stop-color="#E6B860"/></linearGradient>
+    <symbol id="logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="url(#pg)"/><path d="M10 23V9.5h6.4c2.9 0 4.8 1.7 4.8 4.3 0 2.6-1.9 4.3-4.8 4.3H13V23h-3Zm3-7.4h2.9c1.3 0 2.1-.7 2.1-1.8s-.8-1.8-2.1-1.8H13v3.6Z" fill="#1A1404"/></symbol>
+    <symbol id="bird-mini" viewBox="20 40 180 160"><ellipse cx="110" cy="124" rx="62" ry="58" fill="#E6B860"/><circle cx="92" cy="108" r="13" fill="#fff"/><circle cx="128" cy="108" r="13" fill="#fff"/><circle cx="95" cy="110" r="6" fill="#241803"/><circle cx="131" cy="110" r="6" fill="#241803"/><path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/></symbol>
+    <linearGradient id="gbar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF0C4"/><stop offset=".45" stop-color="#E6B860"/><stop offset="1" stop-color="#9A6D24"/></linearGradient>
+    <symbol id="bird" viewBox="0 0 220 220">
+      <path d="M150 120 q40 6 52 26 q-26 4 -44 -6 z" fill="#C98B2E"/>
+      <ellipse cx="110" cy="124" rx="62" ry="58" fill="#E6B860"/>
+      <ellipse cx="104" cy="134" rx="40" ry="40" fill="#F8E6BC"/>
+      <g fill="#E6B860"><path d="M96 64 q-6 -22 6 -34 q8 14 4 30 z"/><path d="M112 60 q2 -24 16 -30 q0 16 -8 30 z"/></g>
+      <circle cx="92" cy="108" r="15" fill="#fff"/><circle cx="128" cy="108" r="15" fill="#fff"/>
+      <circle cx="95" cy="110" r="7" fill="#241803"/><circle cx="131" cy="110" r="7" fill="#241803"/>
+      <circle cx="98" cy="107" r="2.4" fill="#fff"/><circle cx="134" cy="107" r="2.4" fill="#fff"/>
+      <path d="M104 122 l16 0 l-8 12 z" fill="#E8862B"/>
+      <path d="M58 116 q-34 8 -40 36 q28 4 44 -14 q6 -12 -4 -22 z" fill="#E0A93F"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><svg width="30" height="30"><use href="#logo"/></svg>Petyr</a>
+    <div class="nav-links"><a href="#checks">The checks</a><a href="#premium">Premiums</a><a href="#eligibility">Eligibility</a><a href="#stocks">Stock tokens</a></div>
+    <a class="btn btn-gold" href="#join">Join the waitlist</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-top">
+    <div>
+      <p class="kicker">Petyr · research for tokenized assets</p>
+      <h1 class="hero-h stamp-h"><span class="ln">What's inside</span><span class="ln">the token?</span></h1>
+    </div>
+    <div class="hero-side">
+      <p>Tokenized treasuries, gold, stocks and real estate are a wallet away. Petyr checks <b>what backs each one</b>, <b>whether you can cash out</b>, and <b>why the price drifts</b> from what's inside, in plain English.</p>
+      <span class="tagline">Know before you invest</span>
+    </div>
+  </div>
+
+  <div class="xray" id="xray">
+    <div class="xr-layer xr-out" aria-hidden="true">
+      <div class="cell" style="--i:0"><div class="vis"><div class="coin c-gold"><b>PAXG</b></div></div><div class="meta"><b>PAXG</b><small>Gold token</small><div class="px">$4,126.50</div></div></div>
+      <div class="cell" style="--i:1"><div class="vis"><div class="coin c-steel"><b>USDY</b></div></div><div class="meta"><b>USDY</b><small>Treasury token</small><div class="px">$1.1184</div></div></div>
+      <div class="cell" style="--i:2"><div class="vis"><div class="coin c-jade"><b>xNVDA</b></div></div><div class="meta"><b>xNVDA</b><small>Stock token</small><div class="px">$154.12</div></div></div>
+      <div class="cell" style="--i:3"><div class="vis"><div class="coin c-bronze"><b>VLLA</b></div></div><div class="meta"><b>VLLA</b><small>Real-estate token · example</small><div class="px">$48.20</div></div></div>
+      <div class="cell" style="--i:4"><div class="vis"><div class="coin c-violet"><b>SOL</b></div></div><div class="meta"><b>SOL</b><small>Crypto major</small><div class="px">$182.40</div></div></div>
+    </div>
+    <div class="xr-layer xr-in" id="xr-in">
+      <div class="cell" tabindex="0" aria-label="PAXG: backed by allocated gold. Backing verified.">
+        <div class="vis"><svg class="inside" viewBox="0 0 150 100" aria-hidden="true"><path d="M20 78 L40 34 L110 34 L130 78 Z" fill="url(#gbar)"/><path d="M40 34 L52 22 L118 22 L110 34 Z" fill="#FBE5AE"/><path d="M110 34 L118 22 L140 66 L130 78 Z" fill="#A77A2C"/><g fill="#5C4012" font-family="JetBrains Mono,monospace" text-anchor="middle"><text x="75" y="52" font-size="8.5" font-weight="700">FINE GOLD</text><text x="75" y="63" font-size="8">999.9</text><text x="75" y="73" font-size="6.5">1 OZ · No. 48213</text></g></svg></div>
+        <div class="facts"><b>Allocated gold</b><p>1 token = 1 troy oz in a vault. Last attestation matches supply.</p><span class="vbadge vb-ok">BACKING VERIFIED</span></div>
+      </div>
+      <div class="cell" tabindex="0" aria-label="USDY: backed by short-term US Treasuries. Not offered to US persons.">
+        <div class="vis"><svg class="inside" viewBox="0 0 150 100" aria-hidden="true"><rect x="30" y="16" width="104" height="58" rx="3" fill="#1B2438" stroke="#5E79B8"/><rect x="18" y="28" width="104" height="58" rx="3" fill="#DCE6FF" stroke="#86A9FF"/><rect x="24" y="34" width="92" height="46" rx="2" fill="none" stroke="#86A9FF" stroke-dasharray="2 2"/><g fill="#2B3F6E" font-family="JetBrains Mono,monospace" text-anchor="middle"><text x="70" y="50" font-size="7.5" font-weight="700">US TREASURY BILL</text><text x="70" y="61" font-size="7">91-DAY</text><text x="70" y="72" font-size="6.5">$1,000 · 4.6%</text></g></svg></div>
+        <div class="facts"><b>Short-term T-bills</b><p>Plus bank deposits. Yield builds into the price.</p><span class="vbadge vb-az">NON-US ONLY</span></div>
+      </div>
+      <div class="cell" tabindex="0" aria-label="xNVDA: backed one to one by NVDA shares held by a custodian. Trades at a premium.">
+        <div class="vis"><svg class="inside" viewBox="0 0 150 100" aria-hidden="true"><rect x="16" y="18" width="118" height="68" rx="3" fill="#E9F6EF" stroke="#5FAE88"/><rect x="22" y="24" width="106" height="56" rx="2" fill="none" stroke="#5FAE88" stroke-width="2"/><rect x="25" y="27" width="100" height="50" rx="1" fill="none" stroke="#5FAE88" stroke-dasharray="1 2"/><g fill="#1E4A35" font-family="JetBrains Mono,monospace" text-anchor="middle"><text x="66" y="46" font-size="8" font-weight="700">ONE SHARE</text><text x="66" y="57" font-size="6.5">COMMON STOCK</text><text x="66" y="67" font-size="6">held in custody</text></g><circle cx="112" cy="62" r="9" fill="#5FAE88"/><path d="M108 62 l3 3 l6 -6" stroke="#E9F6EF" stroke-width="2" fill="none"/></svg></div>
+        <div class="facts"><b>1 NVDA share each</b><p>Held by a custodian. Costs +0.6% over the stock today.</p><span class="vbadge vb-warn">TRADES AT A PREMIUM</span></div>
+      </div>
+      <div class="cell" tabindex="0" aria-label="VLLA, a made-up example: a villa held in an LLC with no recent attestation. Backing unverified.">
+        <div class="vis"><svg class="inside" viewBox="0 0 150 100" aria-hidden="true"><path d="M34 52 L75 20 L116 52 V86 H34 Z" fill="none" stroke="#FF7A6B" stroke-width="2" stroke-dasharray="5 4"/><rect x="66" y="62" width="18" height="24" fill="none" stroke="#FF7A6B" stroke-width="2" stroke-dasharray="4 3"/><text x="75" y="56" fill="#FF7A6B" font-family="Big Shoulders Display,Impact,sans-serif" font-weight="900" font-size="28" text-anchor="middle">?</text></svg></div>
+        <div class="facts"><b>One villa, in an LLC</b><p>No attestation in 14 months. Nobody has checked lately.</p><span class="vbadge vb-risk">BACKING UNVERIFIED</span></div>
+      </div>
+      <div class="cell" tabindex="0" aria-label="SOL: a native asset with nothing behind it. Value comes from use of the network.">
+        <div class="vis"><svg class="inside" viewBox="0 0 150 100" aria-hidden="true"><g stroke="#8E7FD8" stroke-width="1.5"><path d="M30 30 L75 18 L120 34 L104 78 L52 80 Z M75 18 L75 50 L30 30 M75 50 L120 34 M75 50 L104 78 M75 50 L52 80"/></g><g fill="#CEC5FA"><circle cx="30" cy="30" r="5"/><circle cx="75" cy="18" r="5"/><circle cx="120" cy="34" r="5"/><circle cx="104" cy="78" r="5"/><circle cx="52" cy="80" r="5"/><circle cx="75" cy="50" r="8" fill="#8E7FD8"/></g></svg></div>
+        <div class="facts"><b>Nothing behind it</b><p>A native asset. Its value comes from people using the network.</p><span class="vbadge vb-mute">NATIVE · NOT BACKED</span></div>
+      </div>
+    </div>
+    <div class="lens" aria-hidden="true">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="99" fill="none" stroke="#E6B860" stroke-width="1.6"/>
+        <circle cx="100" cy="100" r="99" fill="none" stroke="#E6B860" stroke-opacity=".25" stroke-width="8"/>
+        <g class="ticks" stroke="#F3D08A" stroke-opacity=".7"><path d="M100 1v7M100 192v7M1 100h7M192 100h7" stroke-width="1.6"/><path d="M170 30l-4 4M30 170l4-4M30 30l4 4M170 170l-4-4" stroke-width="1"/></g>
+        <path id="lens-arc" d="M22 100 A78 78 0 0 1 178 100" fill="none"/>
+        <text fill="#F3D08A" fill-opacity=".85" font-family="JetBrains Mono,monospace" font-size="8.5" font-weight="700" letter-spacing="3"><textPath href="#lens-arc" startOffset="50%" text-anchor="middle">PETYR LENS</textPath></text>
+      </svg>
+    </div>
+  </div>
+  <div class="wrap xr-cap"><span class="hint" id="xr-hint">Move the lens over a token, or tap one</span><span>Illustrative examples. VLLA is made up. Prices are not live.</span></div>
+
+  <div class="wrap hero-join">
+    <form id="waitlist-form" data-source="vault-hero">
+      <div class="wl-row">
+        <label class="sr" for="wl-email">Email address</label>
+        <input type="email" name="email" id="wl-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+        <button class="btn btn-gold" type="submit">Join the waitlist</button>
+      </div>
+      <div class="wl-msg" id="wl-msg" role="status"></div>
+      <p class="wl-note">One email when the app lands. Beta invites go to the waitlist first.</p>
+    </form>
+    <ul class="proof">
+      <li><b>8</b>checks per token</li>
+      <li><b>6</b>asset classes</li>
+      <li><b>23</b>equity methods</li>
+    </ul>
+  </div>
+</header>
+
+<section class="sec" id="checks" aria-labelledby="ck-h">
+  <div class="wrap">
+    <p class="kicker">The inspection</p>
+    <h2 class="sec-h stamp-h" id="ck-h">Eight checks.<br><span class="dim">Every token.</span></h2>
+    <p class="sec-sub">Before Petyr gives a token a verdict, it works through the same list a careful analyst would. You get the answer on the card and the detail one tap away.</p>
+    <div class="checks" id="checks-grid">
+      <div class="scan" aria-hidden="true"></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Backing &amp; issuer</h3><p>What legally backs it, who issued it and where, and what you actually own.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Reserve attestation</h3><p>Who checked the reserves, when, and whether they cover every token.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Redemption</h3><p>Who can cash out with the issuer, how fast, and the minimums and fees.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Premium / discount</h3><p>The token's price against what's inside it, and how that gap has moved.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Yield &amp; duration</h3><p>Where the yield comes from and how a move in rates would change it.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Liquidity</h3><p>How much you can sell on-chain before the price starts to slip.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Chain &amp; bridge</h3><p>Native or bridged, who can mint or freeze it, and what has been audited.</p></div>
+      <div class="chk"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle class="ring" cx="15" cy="15" r="13" stroke-width="1.6"/><path class="tick" d="M9 15.5l4 4 8-9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Holder concentration</h3><p>How much a few wallets own, and what that means when you want out.</p></div>
+    </div>
+    <div class="checks-foot"><span>Sources: issuer reports, on-chain data, DEX quotes, reference prices.</span><span class="soon">Tokenized-asset coverage is in development.</span></div>
+  </div>
+</section>
+
+<section class="sec" id="premium" aria-labelledby="pm-h" style="padding-top:20px">
+  <div class="wrap prem">
+    <div>
+      <p class="kicker">Premiums &amp; discounts</p>
+      <h2 class="sec-h stamp-h" id="pm-h">Are you paying<br><span class="dim">for what's inside?</span></h2>
+      <p class="sec-sub">A token can trade above or below the asset it holds. Petyr tracks the gap and tells you when it moves past a level you care about.</p>
+      <div class="push" data-reveal>
+        <span class="ic"><svg width="22" height="20"><use href="#bird-mini"/></svg></span>
+        <div><b>xNVDA premium crossed your alert</b><p>The token is 0.6% above NVDA. Last month it traded at a discount.</p><small>Petyr · 8:12</small></div>
+      </div>
+    </div>
+    <div class="chart-card" id="chart-card" data-reveal>
+      <div class="chart-head"><b>xNVDA vs NVDA</b><span>premium to underlying · 90 days</span></div>
+      <div class="chart-scroll">
+        <svg class="chart" viewBox="0 0 640 224" role="img" aria-label="Bar chart of xNVDA's premium to NVDA over 90 days. It moved between a 0.86% discount and a 0.74% premium, and stands at a 0.6% premium today, above a 0.5% alert level.">
+          <g class="grid"><line x1="44" x2="632" y1="35" y2="35"/><line x1="44" x2="632" y1="175" y2="175"/></g>
+          <line class="zero" x1="44" x2="632" y1="105" y2="105"/>
+          <text x="36" y="39" text-anchor="end">+1%</text><text x="36" y="109" text-anchor="end">0</text><text x="36" y="179" text-anchor="end">−1%</text>
+          <rect class="pr" style="--i:0" x="45.5" y="94.4" width="10.1" height="10.6" rx="1.5"/>
+          <rect class="pr" style="--i:1" x="58.6" y="89.6" width="10.1" height="15.4" rx="1.5"/>
+          <rect class="pr" style="--i:2" x="71.6" y="68.5" width="10.1" height="36.5" rx="1.5"/>
+          <rect class="pr" style="--i:3" x="84.7" y="75.8" width="10.1" height="29.2" rx="1.5"/>
+          <rect class="pr" style="--i:4" x="97.8" y="58.3" width="10.1" height="46.7" rx="1.5"/>
+          <rect class="pr" style="--i:5" x="110.8" y="58.7" width="10.1" height="46.3" rx="1.5"/>
+          <rect class="pr" style="--i:6" x="123.9" y="64.6" width="10.1" height="40.4" rx="1.5"/>
+          <rect class="pr" style="--i:7" x="137.0" y="53.3" width="10.1" height="51.7" rx="1.5"/>
+          <rect class="pr" style="--i:8" x="150.0" y="67.1" width="10.1" height="37.9" rx="1.5"/>
+          <rect class="pr" style="--i:9" x="163.1" y="60.6" width="10.1" height="44.4" rx="1.5"/>
+          <rect class="pr" style="--i:10" x="176.2" y="74.5" width="10.1" height="30.5" rx="1.5"/>
+          <rect class="pr" style="--i:11" x="189.2" y="79.5" width="10.1" height="25.5" rx="1.5"/>
+          <rect class="pr" style="--i:12" x="202.3" y="76.9" width="10.1" height="28.1" rx="1.5"/>
+          <rect class="pr" style="--i:13" x="215.4" y="72.5" width="10.1" height="32.5" rx="1.5"/>
+          <rect class="pr" style="--i:14" x="228.4" y="95.4" width="10.1" height="9.6" rx="1.5"/>
+          <rect class="pr" style="--i:15" x="241.5" y="97.2" width="10.1" height="7.8" rx="1.5"/>
+          <rect class="pr" style="--i:16" x="254.6" y="90.3" width="10.1" height="14.7" rx="1.5"/>
+          <rect class="pr" style="--i:17" x="267.6" y="84.4" width="10.1" height="20.6" rx="1.5"/>
+          <rect class="pr" style="--i:18" x="280.7" y="94.8" width="10.1" height="10.2" rx="1.5"/>
+          <rect class="pr" style="--i:19" x="293.8" y="99.5" width="10.1" height="5.5" rx="1.5"/>
+          <rect class="pr" style="--i:20" x="306.8" y="84.4" width="10.1" height="20.6" rx="1.5"/>
+          <rect class="dc" style="--i:21" x="319.9" y="105.0" width="10.1" height="2.1" rx="1"/>
+          <rect class="pr" style="--i:22" x="333.0" y="85.9" width="10.1" height="19.1" rx="1.5"/>
+          <rect class="pr" style="--i:23" x="346.0" y="100.0" width="10.1" height="5.0" rx="1.5"/>
+          <rect class="pr" style="--i:24" x="359.1" y="103.6" width="10.1" height="1.4" rx="0.7"/>
+          <rect class="dc" style="--i:25" x="372.2" y="105.0" width="10.1" height="1.7" rx="0.8"/>
+          <rect class="pr" style="--i:26" x="385.2" y="103.8" width="10.1" height="1.2" rx="0.6"/>
+          <rect class="pr" style="--i:27" x="398.3" y="96.6" width="10.1" height="8.4" rx="1.5"/>
+          <rect class="dc" style="--i:28" x="411.4" y="105.0" width="10.1" height="13.2" rx="1.5"/>
+          <rect class="dc" style="--i:29" x="424.4" y="105.0" width="10.1" height="9.9" rx="1.5"/>
+          <rect class="dc" style="--i:30" x="437.5" y="105.0" width="10.1" height="15.9" rx="1.5"/>
+          <rect class="dc" style="--i:31" x="450.6" y="105.0" width="10.1" height="30.5" rx="1.5"/>
+          <rect class="dc" style="--i:32" x="463.6" y="105.0" width="10.1" height="33.8" rx="1.5"/>
+          <rect class="dc" style="--i:33" x="476.7" y="105.0" width="10.1" height="53.1" rx="1.5"/>
+          <rect class="dc" style="--i:34" x="489.8" y="105.0" width="10.1" height="59.2" rx="1.5"/>
+          <rect class="dc" style="--i:35" x="502.8" y="105.0" width="10.1" height="60.0" rx="1.5"/>
+          <rect class="dc" style="--i:36" x="515.9" y="105.0" width="10.1" height="50.7" rx="1.5"/>
+          <rect class="dc" style="--i:37" x="529.0" y="105.0" width="10.1" height="57.8" rx="1.5"/>
+          <rect class="dc" style="--i:38" x="542.0" y="105.0" width="10.1" height="59.2" rx="1.5"/>
+          <rect class="dc" style="--i:39" x="555.1" y="105.0" width="10.1" height="48.9" rx="1.5"/>
+          <rect class="dc" style="--i:40" x="568.2" y="105.0" width="10.1" height="30.1" rx="1.5"/>
+          <rect class="dc" style="--i:41" x="581.2" y="105.0" width="10.1" height="12.4" rx="1.5"/>
+          <rect class="pr" style="--i:42" x="594.3" y="94.5" width="10.1" height="10.5" rx="1.5"/>
+          <rect class="pr" style="--i:43" x="607.4" y="78.4" width="10.1" height="26.6" rx="1.5"/>
+          <rect class="pr" style="--i:44" x="620.4" y="63.0" width="10.1" height="42.0" rx="1.5"/>
+          <line class="alert" x1="44" x2="632" y1="70" y2="70"/>
+          <text class="lbl-warn" x="48" y="64">your alert · +0.5%</text>
+          <circle class="now" cx="625.5" cy="63" r="3.5"/>
+          <text class="lbl-now" x="632" y="54" text-anchor="end">today +0.6%</text>
+          <text x="44" y="206">90 days ago</text><text x="632" y="206" text-anchor="end">today</text>
+        </svg>
+      </div>
+      <div class="legend"><span><i style="background:var(--warn)"></i>Premium: you pay more than what's inside</span><span><i style="background:var(--verify)"></i>Discount: you pay less</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec orbit-sec" aria-labelledby="ob-h" style="padding-top:20px">
+  <div class="wrap">
+    <p class="kicker">One home</p>
+    <h2 class="sec-h stamp-h" id="ob-h">Everything moving on-chain.</h2>
+    <p class="sec-sub">Stocks, treasuries, gold, real estate, private credit and crypto majors, all researched the same way and kept on one watchlist.</p>
+    <div class="orbit" id="orbit" aria-hidden="true">
+      <div class="ring"></div>
+      <svg class="core" viewBox="0 0 220 220"><use href="#bird"/></svg>
+      <div class="orb" style="--ox:50%;--oy:84%"><span class="dot c-jade"></span>Tokenized stocks</div>
+      <div class="orb" style="--ox:81.2%;--oy:67%"><span class="dot c-steel"></span>Treasuries &amp; money funds</div>
+      <div class="orb" style="--ox:81.2%;--oy:33%"><span class="dot c-gold"></span>Gold &amp; commodities</div>
+      <div class="orb" style="--ox:50%;--oy:16%"><span class="dot c-bronze"></span>Real estate</div>
+      <div class="orb" style="--ox:18.8%;--oy:33%"><span class="dot c-gold"></span>Private credit &amp; funds</div>
+      <div class="orb" style="--ox:18.8%;--oy:67%"><span class="dot c-violet"></span>Crypto majors</div>
+    </div>
+    <ul class="orbit-list">
+      <li class="orb"><span class="dot c-jade"></span>Tokenized stocks</li>
+      <li class="orb"><span class="dot c-steel"></span>Treasuries &amp; money funds</li>
+      <li class="orb"><span class="dot c-gold"></span>Gold &amp; commodities</li>
+      <li class="orb"><span class="dot c-bronze"></span>Real estate</li>
+      <li class="orb"><span class="dot c-gold"></span>Private credit &amp; funds</li>
+      <li class="orb"><span class="dot c-violet"></span>Crypto majors</li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec" id="eligibility" aria-labelledby="el-h" style="padding-top:40px">
+  <div class="wrap elig">
+    <div>
+      <p class="kicker">Eligibility</p>
+      <h2 class="sec-h stamp-h" id="el-h">Some tokens<br><span class="dim">aren't for everyone.</span></h2>
+      <p class="sec-sub">Many tokenized funds limit who can hold them. Petyr puts that on the card up front, so you find out before you fall for an asset.</p>
+      <p class="us-note">In the US? You still get every verdict, card and brief. Where an asset excludes US persons, Petyr says so plainly.</p>
+    </div>
+    <div class="rules">
+      <div class="rule" data-reveal><span class="chip" style="color:var(--azure);border-color:rgba(134,169,255,.4)">US PERSONS EXCLUDED</span><p>Offered only outside the US, often under Regulation S.</p></div>
+      <div class="rule" data-reveal><span class="chip" style="color:var(--warn);border-color:rgba(255,180,84,.4)">ACCREDITED ONLY</span><p>You need to meet an income or net-worth test to buy from the issuer.</p></div>
+      <div class="rule" data-reveal><span class="chip" style="color:var(--gold);border-color:rgba(230,184,96,.4)">ISSUER KYC TO REDEEM</span><p>Anyone can hold it, but only verified holders can cash out with the issuer.</p></div>
+      <div class="rule" data-reveal><span class="chip" style="color:var(--risk);border-color:rgba(255,122,107,.45)">PERMISSIONED</span><p>Transfers only work between wallets the issuer has approved.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="stocks" aria-labelledby="st-h" style="padding-top:40px">
+  <div class="wrap dual">
+    <div>
+      <p class="kicker">Stock tokens</p>
+      <h2 class="sec-h stamp-h" id="st-h">Two verdicts.<br><span class="dim">One token.</span></h2>
+      <p class="sec-sub">A stock token is the company plus a wrapper. Petyr reads both: whether the stock is fairly priced, and whether the token is a fair way to hold it.</p>
+    </div>
+    <div class="cards2" id="cards2" data-reveal>
+      <div class="vcard under">
+        <div class="vc-top"><span class="who">The company</span><span class="vbadge vb-warn" style="margin:0;color:var(--gold);border-color:rgba(230,184,96,.4);background:rgba(230,184,96,.1)">FAIRLY VALUED</span></div>
+        <div class="vc-name">NVDA</div>
+        <p class="vc-read">Priced for near-perfection, but the growth still backs it.</p>
+        <div class="vc-tiles"><div><small>Fwd P/E</small><b>31.4×</b></div><div><small>Rev growth</small><b style="color:var(--verify)">+94%</b></div><div><small>Fair value</small><b>$142</b></div></div>
+      </div>
+      <div class="vcard wrap-t">
+        <div class="vc-top"><span class="who">The wrapper</span><span class="vbadge vb-warn" style="margin:0">TRADES AT A PREMIUM</span></div>
+        <div class="vc-name">xNVDA</div>
+        <p class="vc-read">Backed one-to-one by shares in custody. You pay a little extra for the token.</p>
+        <div class="vc-tiles"><div><small>Premium</small><b style="color:var(--warn)">+0.6%</b></div><div><small>Backing</small><b>1 : 1</b></div><div><small>DEX depth ±1%</small><b>$420K</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="join" id="join" aria-labelledby="jn-h">
+  <div class="wrap join-grid">
+    <div>
+      <p class="kicker">Waitlist</p>
+      <h2 class="sec-h stamp-h" id="jn-h">Look inside<br><span class="dim">before you buy.</span></h2>
+      <p class="sec-sub">Join the waitlist for one email when the app is ready and an early invite to the research preview.</p>
+      <form id="waitlist-form-foot" data-source="vault-foot" style="margin-top:28px">
+        <div class="wl-row">
+          <label class="sr" for="wl-email-foot">Email address</label>
+          <input type="email" name="email" id="wl-email-foot" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+          <button class="btn btn-gold" type="submit">Join the waitlist</button>
+        </div>
+        <div class="opt">
+          <p id="v-q-int">Optional: what do you want Petyr to look inside?</p>
+          <div class="chips" role="group" aria-labelledby="v-q-int">
+            <label class="chipx"><input type="checkbox" name="interest" value="treasuries" id="v-i-treas"><span>Treasury tokens</span></label>
+            <label class="chipx"><input type="checkbox" name="interest" value="gold" id="v-i-gold"><span>Gold tokens</span></label>
+            <label class="chipx"><input type="checkbox" name="interest" value="tokenized-stocks" id="v-i-tstocks"><span>Stock tokens</span></label>
+            <label class="chipx"><input type="checkbox" name="interest" value="real-estate" id="v-i-re"><span>Real estate</span></label>
+            <label class="chipx"><input type="checkbox" name="interest" value="crypto" id="v-i-crypto"><span>Crypto majors</span></label>
+            <label class="chipx"><input type="checkbox" name="interest" value="stocks" id="v-i-stocks"><span>Regular stocks</span></label>
+          </div>
+        </div>
+        <div class="opt">
+          <p id="v-q-reg">Optional: where are you based?</p>
+          <div class="chips" role="radiogroup" aria-labelledby="v-q-reg">
+            <label class="chipx"><input type="radio" name="region" value="us" id="v-r-us"><span>United States</span></label>
+            <label class="chipx"><input type="radio" name="region" value="non-us" id="v-r-non"><span>Outside the US</span></label>
+          </div>
+        </div>
+        <div class="wl-msg" id="wl-msg-foot" role="status"></div>
+      </form>
+    </div>
+    <div class="seal" id="seal" aria-hidden="true">
+      <svg class="txt" viewBox="0 0 300 300"><defs><path id="seal-circle" d="M150 150 m-122 0 a122 122 0 1 1 244 0 a122 122 0 1 1 -244 0"/></defs><text><textPath href="#seal-circle" textLength="756" lengthAdjust="spacing">Know before you invest · Know before you invest · </textPath></text></svg>
+      <div class="mid"><svg class="bird" viewBox="0 0 220 220"><use href="#bird"/></svg></div>
+      <div class="done">On the list<small>We'll be in touch</small></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap foot">
+    <a class="brand" href="#top" style="font-family:var(--f-ui);color:var(--ink)"><svg width="24" height="24"><use href="#logo"/></svg>Petyr</a>
+    <nav aria-label="Footer"><a href="#checks">The checks</a><a href="#eligibility">Eligibility</a><a href="/app">Research preview</a><a href="https://x.com/PetyrAI" rel="noopener">@PetyrAI</a></nav>
+    <span>© 2026 Petyr · Research, not financial advice. Tokens carry issuer, custody and smart-contract risk.</span>
+  </div>
+</footer>
+
+<!-- concept switcher — remove when promoting -->
+<nav class="cswitch" aria-label="Design concepts"><a href="index.html">All</a><a href="verdict.html">A</a><a href="decoded.html">B</a><a href="vault.html" aria-current="page">C</a></nav>
+
+<script src="/landing.js" defer></script>
+<script src="vault.js" defer></script>
+</body>
+</html>

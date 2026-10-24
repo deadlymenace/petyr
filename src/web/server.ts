@@ -139,6 +139,11 @@ const WAITLIST_PATH = join(DATA_DIR, 'waitlist.jsonl');
 const MAX_WAITLIST_BODY_BYTES = 1024;
 const MAX_WAITLIST_ENTRIES = 100_000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Optional self-reported signup context. Region feeds the execution-rail
+// decision (where users actually are); interests rank asset coverage.
+// See docs/product-plan.md §5 decision checklist and §11 metrics.
+const WAITLIST_INTERESTS = new Set(['stocks', 'tokenized-stocks', 'treasuries', 'gold', 'real-estate', 'crypto']);
+const WAITLIST_REGIONS = new Set(['us', 'non-us']);
 
 const waitlistEmails = new Set<string>();
 
@@ -529,7 +534,7 @@ async function handleWaitlist(req: Request, corsHeaders: Record<string, string>)
     });
   }
 
-  let body: { email?: string; source?: string };
+  let body: { email?: string; source?: string; interests?: unknown; region?: unknown };
   try {
     const rawText = await req.text();
     if (rawText.length > MAX_WAITLIST_BODY_BYTES) {
@@ -562,10 +567,17 @@ async function handleWaitlist(req: Request, corsHeaders: Record<string, string>)
   }
 
   const source = typeof body.source === 'string' ? body.source.slice(0, 32) : 'unknown';
+  // Unknown values are dropped silently — the context is optional, the email is not.
+  const interests = Array.isArray(body.interests)
+    ? [...new Set(body.interests.filter((i): i is string => typeof i === 'string' && WAITLIST_INTERESTS.has(i)))]
+    : [];
+  const region = typeof body.region === 'string' && WAITLIST_REGIONS.has(body.region) ? body.region : undefined;
   const entry = {
     email,
     ts: new Date().toISOString(),
     source,
+    ...(region ? { region } : {}),
+    ...(interests.length ? { interests } : {}),
     ua: (req.headers.get('User-Agent') || '').slice(0, 200),
   };
 
@@ -600,12 +612,13 @@ function handleWaitlistExport(req: Request, url: URL, corsHeaders: Record<string
   }
 
   // Default: CSV
-  const rows = ['email,ts,source'];
+  const rows = ['email,ts,source,region,interests'];
   for (const line of raw.split('\n')) {
     if (!line.trim()) continue;
     try {
-      const e = JSON.parse(line) as { email?: string; ts?: string; source?: string };
-      const csv = [e.email || '', e.ts || '', e.source || '']
+      const e = JSON.parse(line) as { email?: string; ts?: string; source?: string; region?: string; interests?: string[] };
+      const interests = Array.isArray(e.interests) ? e.interests.join(';') : '';
+      const csv = [e.email || '', e.ts || '', e.source || '', e.region || '', interests]
         .map(v => `"${String(v).replace(/"/g, '""')}"`)
         .join(',');
       rows.push(csv);
