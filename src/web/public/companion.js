@@ -1,4 +1,4 @@
-// Concept · Companion — motion layer.
+// Landing page (Companion) — motion layer.
 // Petyr's dock (bird, speech bubble, clock) follows the reader through a
 // day: whichever section crosses the middle of the screen sets what Petyr
 // says, the time on the clock and whether the sky is day or night. Below

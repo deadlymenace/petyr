@@ -101,7 +101,7 @@
 <main class="page">
   <p class="eyebrow">Petyr · waitlist page</p>
   <h1>Landing page concepts</h1>
-  <p class="lede">The lead concept now centers on what tokenized assets give people and on Petyr as a companion who is always there. Each concept is a complete, working page with its own motion. The pill at the bottom of every page switches between them.</p>
+  <p class="lede">Companion is now the live homepage. It centers on what tokenized assets give people and on Petyr as a companion who is always there. The two earlier directions stay here for reference, each a complete page with its own motion.</p>
 
   <article class="card feature">
     <div class="spec spec-d" aria-hidden="true">
@@ -111,7 +111,7 @@
       <div class="sw"><i style="background:#D7E6F5"></i><i style="background:#F7E3C4"></i><i style="background:#E6B860"></i><i style="background:#EFB98C"></i><i style="background:#0D1329"></i></div>
     </div>
     <div class="body">
-      <div class="name"><h2>Companion</h2><span class="badge">Recommended</span></div>
+      <div class="name"><h2>Companion</h2><span class="badge">Live homepage</span></div>
       <p class="idea">One day in the sky. The page scrolls from dawn through the afternoon, into the night and on to Saturday morning, because tokenized markets never close and neither does Petyr. Petyr rides along in the corner the whole way, with a clock and a line for every part of the day.</p>
       <div><h3>What it says</h3><ul>
         <li>Tokenized assets: open 24/7, start with a few dollars, settle in seconds, sit in your own wallet, and Treasuries that pay a little every day</li>
@@ -122,7 +122,7 @@
         <li>"Old way" cards flip to their tokenized version; a chat with Petyr builds through the afternoon in a sticky phone</li>
         <li>Stars and shooting stars over a night-watch log, weekend trading bars filling in, and the bird following your cursor</li>
       </ul></div>
-      <a class="open" href="companion.html">Open Companion →</a>
+      <a class="open" href="/">Open the homepage →</a>
     </div>
   </article>
 
@@ -161,8 +161,8 @@
 
   <div class="pick">
     <section class="panel rec">
-      <p class="eyebrow">My pick</p>
-      <h2>Go with Companion.</h2>
+      <p class="eyebrow">Why Companion</p>
+      <h2>It sells what people sign up for.</h2>
       <p>It sells the thing people are actually signing up for: <strong>owning stocks, gold and Treasuries from a wallet, any hour, from a few dollars</strong>, with someone in their corner. The day-to-night journey says "24/7" without a single chart, and the bird in the corner makes "never alone" something you feel while scrolling rather than a claim.</p>
       <p>The Vault concept from the first round is retired. Its whole idea was looking inside tokens, which is the analysis-first angle you asked to move away from.</p>
     </section>
@@ -176,13 +176,12 @@
       </ul>
     </section>
     <section class="panel">
-      <p class="eyebrow">To ship one</p>
+      <p class="eyebrow">Where things live</p>
       <ol class="steps">
-        <li>Copy <code>concepts/&lt;name&gt;.html</code> over <code>public/index.html</code>.</li>
-        <li>Move <code>&lt;name&gt;.js</code> to <code>public/</code>, point the script tag at <code>/&lt;name&gt;.js</code>, and add that path to <code>PUBLIC_PATHS</code> in <code>server.ts</code>.</li>
-        <li>Delete the <code>robots</code> tag and the concept-switcher block (both are marked).</li>
+        <li>The homepage is <code>public/index.html</code>, with its motion in <code>public/companion.js</code> (a public path in <code>server.ts</code>).</li>
+        <li>The earlier concepts stay at <code>/concepts/</code>, behind the invite gate in production and marked <code>noindex</code>.</li>
+        <li>To swap one in later: copy it over <code>index.html</code>, move its script to <code>public/</code>, add it to <code>PUBLIC_PATHS</code>, and delete the <code>robots</code> tag and concept-switcher block.</li>
       </ol>
-      <p>Until then the concepts live at <code>/concepts/</code>, behind the invite gate in production.</p>
     </section>
     <section class="panel">
       <p class="eyebrow">Claims and numbers</p>

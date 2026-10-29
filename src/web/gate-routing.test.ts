@@ -64,6 +64,16 @@ describe('gate routing', () => {
     expect(await res.text()).toContain('Know');
   });
 
+  test('landing page scripts are reachable without a code', async () => {
+    // Own rate-limit bucket: the other gate tests use most of the per-IP budget.
+    const headers = { 'X-Forwarded-For': '203.0.113.8' };
+    for (const path of ['/landing.js', '/companion.js']) {
+      const res = await fetch(`${base}${path}`, { headers });
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toContain('javascript');
+    }
+  });
+
   test('/app is gated without a cookie', async () => {
     const res = await fetch(`${base}/app`);
     const html = await res.text();

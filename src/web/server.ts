@@ -123,7 +123,7 @@ const inviteCodes = loadInviteCodes();
 // the research preview (/app) and chat APIs remain gated.
 // ---------------------------------------------------------------------------
 const PUBLIC_PATHS = new Set([
-  '/', '/index.html', '/landing.js', '/bird.svg', '/favicon.ico',
+  '/', '/index.html', '/landing.js', '/companion.js', '/bird.svg', '/favicon.ico',
   '/api/waitlist', '/api/waitlist/export',
   // Admin-token-authenticated — carry their own (stronger) auth:
   '/api/invites', '/api/invites/generate',
