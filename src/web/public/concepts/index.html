@@ -10,16 +10,18 @@
 <link rel="icon" type="image/svg+xml" href="/bird.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Big+Shoulders+Display:wght@900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Fraunces:ital,opsz,wght,SOFT@1,9..144,400,100&display=swap" rel="stylesheet">
 <style>
-  /* Review page for the three landing directions.
-     Layout: one column of reading, then three specimen cards side by side,
-     then the recommendation and the shared changes. Theme-aware. */
+  /* Review page for the landing directions.
+     Layout: one column of reading, the recommended concept as a wide
+     feature card, the earlier directions beside each other, then the
+     recommendation and the shared changes. Theme-aware. */
   :root{
     --bg:#F4F4F1; --card:#FFFFFF; --fg:#15171C; --muted:#5A606B; --faint:#8A909A; --rule:#E1E2DD;
     --accent:#9A6B12; --accent-bg:rgba(230,184,96,.18);
     --f-ui:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
     --f-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --f-voice:'Fraunces',Georgia,'Times New Roman',serif;
     color-scheme:light;
   }
   @media (prefers-color-scheme:dark){
@@ -34,11 +36,20 @@
   .eyebrow{font:700 12px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
   h1{font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin-top:12px;text-wrap:balance}
   .lede{font-size:18px;color:var(--muted);max-width:40em;margin-top:16px;font-weight:500}
-  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:44px}
-  .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--rule);border-radius:18px;overflow:hidden;min-width:0}
-  .spec{position:relative;height:220px;padding:22px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+  .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--rule);border-radius:20px;overflow:hidden;min-width:0}
+  .feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);margin-top:44px}
+  .spec{position:relative;min-height:220px;padding:22px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+  .feature .spec{min-height:100%}
   .sw{display:flex;gap:6px}
   .sw i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(127,127,127,.35)}
+  .spec-d{background:linear-gradient(180deg,#D7E6F5 0%,#F7E3C4 38%,#EFB98C 56%,#5B4468 72%,#141A38 86%,#080B18 100%);color:#121620;padding:30px}
+  .spec-d .t{font:800 clamp(40px,5vw,58px)/.98 var(--f-ui);letter-spacing:-.045em}
+  .spec-d .t em{display:block;font:italic 400 1.02em var(--f-voice);font-variation-settings:"SOFT" 100,"opsz" 144;color:#9C6A12;letter-spacing:-.02em}
+  .spec-d .bubble{align-self:flex-end;max-width:240px;margin-top:22px;padding:10px 14px;border-radius:18px 18px 6px 18px;background:rgba(255,255,255,.85);font:italic 400 15px/1.3 var(--f-voice);font-variation-settings:"SOFT" 100;color:#121620;transition:transform .6s cubic-bezier(.34,1.56,.64,1)}
+  .card:hover .spec-d .bubble{transform:translateY(-6px)}
+  .spec-d .moon{position:absolute;right:34px;bottom:96px;width:34px;height:34px;border-radius:50%;box-shadow:inset -8px -3px 0 0 #F3D08A}
+  .spec-d .stars{position:absolute;inset:auto 0 0 0;height:30%;background-image:radial-gradient(1.2px 1.2px at 12% 40%,#fff,transparent),radial-gradient(1px 1px at 30% 70%,#fff,transparent),radial-gradient(1.4px 1.4px at 52% 30%,#F3D08A,transparent),radial-gradient(1px 1px at 68% 62%,#fff,transparent),radial-gradient(1.2px 1.2px at 84% 34%,#fff,transparent),radial-gradient(1px 1px at 92% 78%,#fff,transparent)}
+  .spec-d .sw{position:relative;margin-top:28px}
   .spec-a{background:#07080B;color:#F4F4F0}
   .spec-a .t{font:800 38px/1 var(--f-ui);letter-spacing:-.045em}
   .spec-a .t span{background:linear-gradient(100deg,#F3D08A,#E6B860 40%,#FFE7B0 50%,#E6B860 60%,#F3D08A);background-size:250% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;transition:background-position 1.2s ease}
@@ -52,16 +63,12 @@
   .spec-b .doc{font:italic 15px 'Times New Roman',Times,serif;color:#787E89}
   .spec-b .doc s{text-decoration-color:#C2412F;text-decoration-thickness:2px}
   .spec-b .doc b{font:700 14px var(--f-ui);font-style:normal;color:#121419;margin-left:6px}
-  .spec-c{background:radial-gradient(70% 80% at 80% 90%,rgba(230,184,96,.16),transparent 70%),#050608;color:#EEEBE3}
-  .spec-c .t{font:900 44px/.86 'Big Shoulders Display',Impact,sans-serif;text-transform:uppercase}
-  .spec-c .t span{color:transparent;-webkit-text-stroke:1.5px #E6B860}
-  .spec-c .coin{position:absolute;right:22px;bottom:22px;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font:900 17px 'Big Shoulders Display',Impact,sans-serif;color:rgba(18,12,3,.85);background:radial-gradient(circle at 32% 26%,#FFF4D2,#F3D08A 22%,#D9A441 62%,#7E5A1C);box-shadow:inset 0 0 0 4px rgba(255,255,255,.14),0 16px 30px -14px #000;transition:transform .8s cubic-bezier(.16,1,.3,1)}
-  .spec-c .ring{position:absolute;right:6px;bottom:6px;width:106px;height:106px;border-radius:50%;border:1.5px solid #E6B860;box-shadow:0 0 0 6px rgba(230,184,96,.14);transition:transform .8s cubic-bezier(.16,1,.3,1)}
-  .card:hover .spec-c .ring{transform:translate(-14px,-10px) scale(1.06)}
-  .body{display:flex;flex-direction:column;gap:14px;padding:22px 22px 24px;flex:1}
-  .name{display:flex;align-items:baseline;gap:10px}
+  .body{display:flex;flex-direction:column;gap:14px;padding:24px 24px 26px;flex:1}
+  .feature .body{padding:30px 30px 30px}
+  .name{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .name b{font:700 13px var(--f-mono);color:var(--accent)}
-  .name h2{font-size:24px;letter-spacing:-.02em;line-height:1.1}
+  .name h2{font-size:26px;letter-spacing:-.02em;line-height:1.1}
+  .badge{font:700 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:var(--accent-bg);color:var(--accent)}
   .idea{color:var(--muted);font-weight:500}
   h3{font:700 11.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
   ul{list-style:none;display:grid;gap:6px}
@@ -71,6 +78,9 @@
   .fit strong{font-weight:700}
   .open{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--fg);color:var(--bg);font-weight:700;text-decoration:none;transition:transform .2s}
   .open:hover{transform:translateY(-1px)}
+  .earlier{margin-top:52px}
+  .earlier>p{color:var(--muted);margin-top:8px;max-width:44em;font-size:15.5px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:20px}
   .pick{margin-top:56px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
   .panel{background:var(--card);border:1px solid var(--rule);border-radius:18px;padding:26px 28px;min-width:0}
   .panel.rec{background:var(--accent-bg);border-color:transparent}
@@ -83,93 +93,86 @@
   ol.steps li{padding-left:4px}
   ol.steps li::before{display:none}
   .foot{margin-top:40px;font:500 12.5px var(--f-mono);color:var(--faint)}
-  @media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}.pick{grid-template-columns:minmax(0,1fr)}}
+  @media (max-width:980px){.feature,.grid,.pick{grid-template-columns:minmax(0,1fr)}.feature .spec{min-height:320px}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <main class="page">
   <p class="eyebrow">Petyr · waitlist page</p>
-  <h1>Three directions for the landing page</h1>
-  <p class="lede">Each one is a complete, working page with its own motion, built around the October plan: stocks plus tokenized treasuries, gold, stock tokens and real estate. Open one and scroll it. The A / B / C pill at the bottom of every page switches between them.</p>
+  <h1>Landing page concepts</h1>
+  <p class="lede">The lead concept now centers on what tokenized assets give people and on Petyr as a companion who is always there. Each concept is a complete, working page with its own motion. The pill at the bottom of every page switches between them.</p>
 
-  <div class="grid">
-    <article class="card">
-      <div class="spec spec-a" aria-hidden="true">
-        <div class="t">Know <span>before</span><br>you invest.</div>
-        <div class="chips"><b style="color:#E6B860;border-color:rgba(230,184,96,.4)">FAIRLY VALUED</b><b style="color:#34D399;border-color:rgba(52,211,153,.4)">BACKING VERIFIED</b></div>
-        <div class="sw"><i style="background:#07080B"></i><i style="background:#E6B860"></i><i style="background:#F3D08A"></i><i style="background:#34D399"></i><i style="background:#86A9FF"></i></div>
-      </div>
-      <div class="body">
-        <div class="name"><b>A</b><h2>Verdict</h2></div>
-        <p class="idea">The product, working. The hero is the Ask Petyr card answering four real questions in a loop, and the page walks through verdict, snapshot and full reasoning.</p>
-        <div><h3>Motion</h3><ul>
-          <li>Question types itself, the agent's tools tick off, the card assembles</li>
-          <li>Watchlist card deepens through three levels as you scroll</li>
-          <li>Morning-brief notifications drop onto a lock screen; the bird follows your cursor</li>
-        </ul></div>
-        <p class="fit"><strong>Best if</strong> you want the clearest explanation of what the app does, closest to your current brand and App Store mockups.</p>
-        <p class="fit"><strong>Watch out:</strong> the most conventional of the three. Strong, but it looks like a good fintech page rather than only Petyr.</p>
-        <a class="open" href="verdict.html">Open concept A →</a>
-      </div>
-    </article>
+  <article class="card feature">
+    <div class="spec spec-d" aria-hidden="true">
+      <div class="t">Never invest<em>alone.</em></div>
+      <div class="bubble">You sleep. I'll keep watch.</div>
+      <div class="stars"></div><div class="moon"></div>
+      <div class="sw"><i style="background:#D7E6F5"></i><i style="background:#F7E3C4"></i><i style="background:#E6B860"></i><i style="background:#EFB98C"></i><i style="background:#0D1329"></i></div>
+    </div>
+    <div class="body">
+      <div class="name"><h2>Companion</h2><span class="badge">Recommended</span></div>
+      <p class="idea">One day in the sky. The page scrolls from dawn through the afternoon, into the night and on to Saturday morning, because tokenized markets never close and neither does Petyr. Petyr rides along in the corner the whole way, with a clock and a line for every part of the day.</p>
+      <div><h3>What it says</h3><ul>
+        <li>Tokenized assets: open 24/7, start with a few dollars, settle in seconds, sit in your own wallet, and Treasuries that pay a little every day</li>
+        <li>Petyr is with you: answers any question, tells you first when something moves, stays calm on bad days, keeps watch overnight</li>
+      </ul></div>
+      <div><h3>Motion</h3><ul>
+        <li>The sky changes from dawn to night to sunrise as you scroll, and the clock follows</li>
+        <li>"Old way" cards flip to their tokenized version; a chat with Petyr builds through the afternoon in a sticky phone</li>
+        <li>Stars and shooting stars over a night-watch log, weekend trading bars filling in, and the bird following your cursor</li>
+      </ul></div>
+      <a class="open" href="companion.html">Open Companion →</a>
+    </div>
+  </article>
 
-    <article class="card">
-      <div class="spec spec-b" aria-hidden="true">
-        <div class="t">Know <mark>before</mark><br>you invest.</div>
-        <p class="doc"><s>Trades at a 2.1% discount to NAV</s><b>→ Sells for less than what's inside.</b></p>
-        <div class="sw"><i style="background:#F6F6F2"></i><i style="background:#121419"></i><i style="background:#F7D57F"></i><i style="background:#C2412F"></i><i style="background:#0E7A57"></i></div>
-      </div>
-      <div class="body">
-        <div class="name"><b>B</b><h2>Decoded</h2></div>
-        <p class="idea">Petyr as translator. A light page made of documents: a 10-K, an attestation report and an offering memo get highlighted and annotated in the margin.</p>
-        <div><h3>Motion</h3><ul>
-          <li>Document stack shuffles; the highlighter sweeps and margin notes pin beside each passage</li>
-          <li>Jargon is struck through and rewritten in plain English as you scroll</li>
-          <li>Before/after slider on token terms, a printing morning brief, a stamp on sign-up</li>
-        </ul></div>
-        <p class="fit"><strong>Best if</strong> you want the warmest, most beginner-friendly voice, and a look no other finance app has.</p>
-        <p class="fit"><strong>Watch out:</strong> a light theme breaks from the dark gold brand, and it shows less of the actual app UI.</p>
-        <a class="open" href="decoded.html">Open concept B →</a>
-      </div>
-    </article>
-
-    <article class="card">
-      <div class="spec spec-c" aria-hidden="true">
-        <div class="t">What's inside<br><span>the token?</span></div>
-        <div class="ring"></div><div class="coin">PAXG</div>
-        <div class="sw"><i style="background:#050608"></i><i style="background:#E6B860"></i><i style="background:#3DDC97"></i><i style="background:#FFB454"></i><i style="background:#86A9FF"></i></div>
-      </div>
-      <div class="body">
-        <div class="name"><b>C</b><h2>Vault</h2></div>
-        <p class="idea">Tokenized-first. A lens slides across five tokens and shows what backs each one: allocated gold, T-bills, custodied shares, an unverified villa, nothing at all.</p>
-        <div><h3>Motion</h3><ul>
-          <li>Lens follows the cursor or glides on its own; on phones it becomes a row scanner</li>
-          <li>A scan line ticks off the eight token checks</li>
-          <li>Premium bars grow past an alert line; asset classes orbit the bird; a seal stamps on sign-up</li>
-        </ul></div>
-        <p class="fit"><strong>Best if</strong> you're leading with "the home for tokenized assets" and the crypto-native global investor.</p>
-        <p class="fit"><strong>Watch out:</strong> the tokenized tools are still being built, so the page leans on what's coming. It says so in the copy.</p>
-        <a class="open" href="vault.html">Open concept C →</a>
-      </div>
-    </article>
-  </div>
+  <section class="earlier" aria-labelledby="earlier-h">
+    <p class="eyebrow" id="earlier-h">Earlier directions</p>
+    <p>Both lead with Petyr's analysis rather than the companion feeling. Sections from either could still be reused inside Companion.</p>
+    <div class="grid">
+      <article class="card">
+        <div class="spec spec-a" aria-hidden="true">
+          <div class="t">Know <span>before</span><br>you invest.</div>
+          <div class="chips"><b style="color:#E6B860;border-color:rgba(230,184,96,.4)">FAIRLY VALUED</b><b style="color:#34D399;border-color:rgba(52,211,153,.4)">BACKING VERIFIED</b></div>
+          <div class="sw"><i style="background:#07080B"></i><i style="background:#E6B860"></i><i style="background:#F3D08A"></i><i style="background:#34D399"></i><i style="background:#86A9FF"></i></div>
+        </div>
+        <div class="body">
+          <div class="name"><b>A</b><h2>Verdict</h2></div>
+          <p class="idea">The product, working: the Ask Petyr card answers four questions in a loop, and the page walks through verdict, snapshot and full reasoning.</p>
+          <p class="fit"><strong>Worth borrowing:</strong> the verdict card could appear inside Companion's afternoon chat.</p>
+          <a class="open" href="verdict.html">Open Verdict →</a>
+        </div>
+      </article>
+      <article class="card">
+        <div class="spec spec-b" aria-hidden="true">
+          <div class="t">Know <mark>before</mark><br>you invest.</div>
+          <p class="doc"><s>Trades at a 2.1% discount to NAV</s><b>→ Sells for less than what's inside.</b></p>
+          <div class="sw"><i style="background:#F6F6F2"></i><i style="background:#121419"></i><i style="background:#F7D57F"></i><i style="background:#C2412F"></i><i style="background:#0E7A57"></i></div>
+        </div>
+        <div class="body">
+          <div class="name"><b>B</b><h2>Decoded</h2></div>
+          <p class="idea">Petyr as translator: a light page of filings that get highlighted and annotated, and jargon rewritten in plain English as you scroll.</p>
+          <p class="fit"><strong>Worth borrowing:</strong> the jargon-to-plain-English rows would suit the "ask anything" part of Companion.</p>
+          <a class="open" href="decoded.html">Open Decoded →</a>
+        </div>
+      </article>
+    </div>
+  </section>
 
   <div class="pick">
     <section class="panel rec">
       <p class="eyebrow">My pick</p>
-      <h2>Go with C, and borrow A's three-depth section.</h2>
-      <p>Your plan now names the <strong>crypto-native global investor</strong> as the primary persona, and C is the only direction that opens with their actual question: what backs this token, and can I get my money out? The lens explains that in one gesture, and nothing else in the category looks like it.</p>
-      <p>C doesn't show the app itself much. A's sticky verdict → snapshot → reasoning section would slot in after the eight checks and fill that gap. If you'd rather lead with the stock product that works today, A is the safe choice; its hero already cycles through tokens too.</p>
+      <h2>Go with Companion.</h2>
+      <p>It sells the thing people are actually signing up for: <strong>owning stocks, gold and Treasuries from a wallet, any hour, from a few dollars</strong>, with someone in their corner. The day-to-night journey says "24/7" without a single chart, and the bird in the corner makes "never alone" something you feel while scrolling rather than a claim.</p>
+      <p>The Vault concept from the first round is retired. Its whole idea was looking inside tokens, which is the analysis-first angle you asked to move away from.</p>
     </section>
     <section class="panel">
-      <p class="eyebrow">In all three</p>
+      <p class="eyebrow">In every concept</p>
       <ul>
-        <li>Copy rewritten for stocks and tokenized assets. The live page only covers stocks and says 18 tools; the plan says 19.</li>
-        <li>The NVDA example is consistent now. The live page shows $131.4 against a $142 fair value but says "8% above" it.</li>
-        <li>The waitlist asks two optional questions, what to watch and US or not, so you have the geography data §5 needs for the rail decision. The server keeps them and adds them to the CSV export.</li>
-        <li>Each form tags its source (<code>vault-hero</code>, <code>verdict-foot</code>…), so an A/B test shows which page converts.</li>
-        <li>No third-party scripts, so they fit the current CSP. Reduced-motion support, complete without JavaScript, "Research, not advice" on every page, and a made-up token for the one negative verdict.</li>
+        <li>Copy covers stocks and tokenized assets. The live page only covers stocks and says 18 tools; the plan says 19.</li>
+        <li>The waitlist asks two optional questions, what to own or watch and US or not, so you have the geography data §5 needs for the rail decision. The server keeps them and adds them to the CSV export.</li>
+        <li>Each form tags its source (<code>companion-hero</code>, <code>verdict-foot</code>…), so an A/B test shows which page converts.</li>
+        <li>No third-party scripts, so they fit the current CSP. Reduced-motion support, complete without JavaScript, and "Research, not financial advice" on every page.</li>
       </ul>
     </section>
     <section class="panel">
@@ -182,8 +185,8 @@
       <p>Until then the concepts live at <code>/concepts/</code>, behind the invite gate in production.</p>
     </section>
     <section class="panel">
-      <p class="eyebrow">Numbers on these pages</p>
-      <p>Every price, yield and verdict is illustrative and labeled as such on the page. Real tokens only get neutral or positive reads; VLLA, the "backing unverified" example, is made up.</p>
+      <p class="eyebrow">Claims and numbers</p>
+      <p>Prices, yields and holdings are illustrative. Companion says "many" tokenized assets trade around the clock and notes that availability depends on the asset and where you live, since many tokenized funds exclude US persons. It never promises returns or tells anyone to buy or sell.</p>
     </section>
   </div>
   <p class="foot">Petyr · research, not financial advice</p>
