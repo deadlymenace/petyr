@@ -33,6 +33,24 @@
   observeOnce(reveals.filter((el) => !el.classList.contains('in')),
     { rootMargin: '0px 0px -8% 0px', threshold: 0.15 }, (el) => el.classList.add('in'));
 
+  // Calls onCross for whichever element crosses a thin band at the middle of
+  // the screen. rootMargin percentages resolve against the viewport's width
+  // (per the spec), so the band is computed in pixels from its height and
+  // rebuilt when the window resizes.
+  function watchMidline(els, onCross) {
+    let io = null, timer = 0;
+    const build = () => {
+      io?.disconnect();
+      const h = innerHeight;
+      io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) onCross(e.target);
+      }, { rootMargin: `${-Math.round(h * 0.46)}px 0px ${-Math.round(h * 0.53)}px 0px` });
+      els.forEach((el) => io.observe(el));
+    };
+    build();
+    addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(build, 150); });
+  }
+
   // ---------------------------------------------------------------- the dock
   const bubble = $('#bubble'), sayEl = $('#b-say'), timeEl = $('#b-time');
   const clock = $('#clock'), clockT = $('#clock-t'), bird = $('#bird');
@@ -69,11 +87,8 @@
   }
 
   const speakers = $$('[data-say]');
-  const speakerIo = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting && e.target !== current) speak(e.target);
-  }, { rootMargin: '-46% 0px -53% 0px' });
-  speakers.forEach((el) => speakerIo.observe(el));
   current = speakers[0];
+  watchMidline(speakers, (el) => { if (el !== current) speak(el); });
   tuckTimer = setTimeout(() => bubble.classList.add('hide'), narrow.matches ? 6000 : 10000);
 
   $('#b-x').addEventListener('click', () => { closed = true; bubble.classList.add('hide'); });
@@ -128,10 +143,7 @@
     });
   }
   if (steps.length) {
-    const stepIo = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) setStep(Number(e.target.dataset.step));
-    }, { rootMargin: '-46% 0px -53% 0px' });
-    steps.forEach((s) => stepIo.observe(s));
+    watchMidline(steps, (s) => setStep(Number(s.dataset.step)));
     wide.addEventListener('change', () => setStep(Number($('.step.on')?.dataset.step || 1)));
     setStep(1);
   }
