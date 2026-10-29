@@ -18,6 +18,9 @@ const dir = mkdtempSync(join(tmpdir(), 'petyr-gate-'));
 process.env.PETYR_DATA_DIR = dir;
 process.env.PETYR_ADMIN_TOKEN = 'test-admin-token';
 delete process.env.PETYR_INVITE_CODES; // gate driven purely by one-time codes
+// Lets the waitlist tests use their own rate-limit bucket via X-Forwarded-For;
+// requests without the header still key on the socket IP as before.
+process.env.PETYR_TRUST_PROXY = '1';
 
 const { startServer } = await import('./server.js');
 const server = startServer(0);
@@ -59,6 +62,16 @@ describe('gate routing', () => {
     const res = await fetch(`${base}/`);
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('Know');
+  });
+
+  test('landing page scripts are reachable without a code', async () => {
+    // Own rate-limit bucket: the other gate tests use most of the per-IP budget.
+    const headers = { 'X-Forwarded-For': '203.0.113.8' };
+    for (const path of ['/landing.js', '/companion.js']) {
+      const res = await fetch(`${base}${path}`, { headers });
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toContain('javascript');
+    }
   });
 
   test('/app is gated without a cookie', async () => {
@@ -132,5 +145,59 @@ describe('gate routing', () => {
   test('admin endpoints require the bearer token', async () => {
     expect((await fetch(`${base}/api/invites`)).status).toBe(401);
     expect((await fetch(`${base}/api/invites/generate`, { method: 'POST' })).status).toBe(401);
+  });
+});
+
+describe('waitlist', () => {
+  // The gate tests above use most of the per-IP request budget.
+  const CLIENT = { 'X-Forwarded-For': '203.0.113.7' };
+
+  async function join(body: Record<string, unknown>): Promise<Response> {
+    return fetch(`${base}/api/waitlist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...CLIENT },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function storedEntry(email: string): Promise<Record<string, unknown> | undefined> {
+    const res = await fetch(`${base}/api/waitlist/export?format=jsonl`, { headers: { ...ADMIN, ...CLIENT } });
+    return (await res.text())
+      .split('\n')
+      .filter(Boolean)
+      .map(line => JSON.parse(line) as Record<string, unknown>)
+      .find(e => e.email === email);
+  }
+
+  test('stores allowlisted interests and region, dropping unknown values', async () => {
+    const res = await join({
+      email: 'context@example.com',
+      source: 'vault-hero',
+      region: 'non-us',
+      interests: ['treasuries', 'gold', 'gold', 'meme-coins', 42],
+    });
+    expect(res.status).toBe(200);
+
+    const entry = await storedEntry('context@example.com');
+    expect(entry?.region).toBe('non-us');
+    expect(entry?.interests).toEqual(['treasuries', 'gold']);
+    expect(entry?.source).toBe('vault-hero');
+  });
+
+  test('signup without context still works and stores no context fields', async () => {
+    expect((await join({ email: 'plain@example.com', region: 'mars' })).status).toBe(200);
+
+    const entry = await storedEntry('plain@example.com');
+    expect(entry).toBeDefined();
+    expect(entry).not.toHaveProperty('region');
+    expect(entry).not.toHaveProperty('interests');
+  });
+
+  test('CSV export includes region and interests columns', async () => {
+    const res = await fetch(`${base}/api/waitlist/export`, { headers: { ...ADMIN, ...CLIENT } });
+    const lines = (await res.text()).trim().split('\n');
+    expect(lines[0]).toBe('email,ts,source,region,interests');
+    const row = lines.find(l => l.startsWith('"context@example.com"'));
+    expect(row).toContain('"non-us","treasuries;gold"');
   });
 });
