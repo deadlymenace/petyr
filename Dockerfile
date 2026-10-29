@@ -1,6 +1,13 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 
+# Install Playwright's browsers outside root's home. The server runs as petyr,
+# so the default (~/.cache/ms-playwright) would point at an empty
+# /home/petyr/.cache, and /root isn't readable by petyr. Set before
+# `bun install`, whose postinstall downloads Chromium too. The browser files
+# are world-readable, so they need no chown.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
 # Install dependencies
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
